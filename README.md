@@ -53,11 +53,17 @@ Outputs:
 
 ---
 
-## 📊 Current Baseline
-- Features: difference in rolling 10-game offensive/defensive averages  
-- Model: Logistic Regression (scikit-learn)  
-- Typical metrics (varies by season): ~X% accuracy, ~Y ROC-AUC  
-  *(fill these in after you train on your machine)*
+## 📊 Current Baseline (as of 2025-09-04)
+
+- Data: BR games for 2024–25 index (125 games parsed)
+- Features: Δ(rolling 10-game offense/defense)
+- Model: Logistic Regression (sklearn)
+
+**Results**
+- Train size: 57
+- Test size: 20
+- Accuracy: **0.45**
+- ROC-AUC: **0.47**
 
 ---
 
