@@ -1,0 +1,42 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+*.egg
+*.egg-info/
+.eggs/
+
+# Virtual environments
+.venv/
+env/
+venv/
+ENV/
+
+# IDE/editor cruft
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+
+# Data & artifacts
+data_cache/
+artifacts/
+notebooks/.ipynb_checkpoints/
+
+# Build / dist
+build/
+dist/
+*.log
+*.out
+
+# OS specific
+Thumbs.db
