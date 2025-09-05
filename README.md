@@ -53,17 +53,17 @@ Outputs:
 
 ---
 
-## 📊 Current Baseline (as of 2025-09-04)
+## 📊 Current Baseline (as of 2025-09-06)
 
 - Data: BR games for 2024–25 index (125 games parsed)
-- Features: Δ(rolling 10-game offense/defense)
+- Features used: `delta_off`, `delta_def`
 - Model: Logistic Regression (sklearn)
 
 **Results**
 - Train size: 57
 - Test size: 20
-- Accuracy: **0.45**
-- ROC-AUC: **0.47**
+- Accuracy: **0.54**
+- ROC-AUC: **0.52**
 
 ---
 
