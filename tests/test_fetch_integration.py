@@ -23,12 +23,13 @@ def test_end_to_end_writes_csv(tmp_path, monkeypatch):
     # make fetch_season_html return canned HTML
     monkeypatch.setattr(fetch_mod, "fetch_season_html", lambda yr: HTML, raising=True)
 
-    # run for two seasons (content identical, should just stack)
+    # run for two seasons (content identical, de-duped by game_id)
     fetch_mod.main([2024, 2025])
 
     out_csv = tmp_path / "games.csv"
     assert out_csv.exists()
 
     df = pd.read_csv(out_csv, parse_dates=["GAME_DATE"])
-    assert len(df) == 4
+    assert len(df) == 2
+    assert df["game_id"].nunique() == 2
     assert {"GAME_DATE","home_team","away_team","home_score","away_score","home_win"}.issubset(df.columns)
