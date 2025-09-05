@@ -25,7 +25,7 @@ HTML = """
 def test_parse_games_basic():
     df = parse_games(HTML)
     # columns present
-    expect = {"GAME_DATE","home_team","away_team","home_score","away_score","home_win","game_key"}
+    expect = {"GAME_DATE","home_team","away_team","home_score","away_score","home_win","game_id"}
     assert expect.issubset(df.columns)
 
     # rows: postponed dropped; duplicate deduped -> 2 unique games

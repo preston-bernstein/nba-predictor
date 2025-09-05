@@ -5,7 +5,6 @@ REQUIRED_COLS = {"Date", "Visitor/Neutral", "Home/Neutral"}
 
 def parse_games(html: str) -> pd.DataFrame:
     """Parse a Basketball-Reference season index page into a tidy games DataFrame."""
-    # Find only the game tables on the page
     tables = pd.read_html(StringIO(html), flavor="lxml")
     game_tables = [t for t in tables if REQUIRED_COLS.issubset(set(map(str, t.columns)))]
     if not game_tables:
@@ -37,10 +36,16 @@ def parse_games(html: str) -> pd.DataFrame:
     out = df[["GAME_DATE", "home_team", "home_score", "away_team", "away_score"]].copy()
     out["home_win"] = (out["home_score"] > out["away_score"]).astype(int)
 
-    # Natural key is clearer than hashing; also de-dupes month header repeats
-    out["game_key"] = out.apply(
+    # Natural key -> call it game_id
+    out["game_id"] = out.apply(
         lambda r: f"{r.GAME_DATE.date()}::{r.away_team}@{r.home_team}", axis=1
     )
-    out = out.drop_duplicates(subset=["game_key"]).sort_values("GAME_DATE").reset_index(drop=True)
+
+    # De-dupe on game_id
+    out = (
+        out.drop_duplicates(subset=["game_id"])
+           .sort_values("GAME_DATE")
+           .reset_index(drop=True)
+    )
 
     return out
