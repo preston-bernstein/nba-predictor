@@ -11,6 +11,11 @@ OUT_DIR.mkdir(parents=True, exist_ok=True)
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
 
+def years_span(start: int, end: int) -> list[int]:
+    if end < start:
+        raise SystemExit("--to must be >= --from")
+    return list(range(start, end + 1))
+
 def main(seasons: list[int]):
     frames = []
     for yr in seasons:
@@ -19,15 +24,25 @@ def main(seasons: list[int]):
         frames.append(parse_games(html))
 
     games = pd.concat(frames, ignore_index=True).sort_values("GAME_DATE")
+    games = games.drop_duplicates(subset=["game_id"]).reset_index(drop=True)
+
+    subset = ["game_id"] if "game_id" in games.columns else (["game_key"] if "game_key" in games.columns else None)
+    if subset:
+        games = games.drop_duplicates(subset=subset).reset_index(drop=True)
+
     out_csv = OUT_DIR / "games.csv"
     games.to_csv(out_csv, index=False)
     logging.info("saved %d games -> %s", len(games), out_csv)
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "--seasons", type=int, nargs="+", default=[2024, 2025],
-        help="Season end years (e.g. 2024 for the 2023-24 season)."
-    )
-    args = parser.parse_args()
-    main(args.seasons)
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--from", dest="from_year", type=int, default=2019,
+                    help="Start season end-year (e.g., 2019 means 2018–19).")
+    ap.add_argument("--to", dest="to_year", type=int, default=2025,
+                    help="End season end-year (inclusive).")
+    ap.add_argument("--seasons", type=int, nargs="+",
+                    help="Explicit list of season end-years (overrides --from/--to).")
+    args = ap.parse_args()
+
+    years = args.seasons if args.seasons else years_span(args.from_year, args.to_year)
+    main(years)

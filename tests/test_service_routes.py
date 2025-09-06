@@ -34,23 +34,28 @@ def test_teams(monkeypatch):
 
 def test_predict_ok(monkeypatch):
     # stub features + model
-    monkeypatch.setattr(routes_mod, "matchup_features", lambda h, a: (1.5, -0.5), raising=True)
+    monkeypatch.setattr(
+        routes_mod, "matchup_features",
+        lambda h, a, **kw: (1.5, -0.5),   # 👈 accept date= (and future kwargs)
+        raising=True
+    )
     monkeypatch.setattr(routes_mod, "load_model", lambda: DummyModel(), raising=True)
 
     client = TestClient(app)
-    r = client.get("/predict", params={"home": "NYK", "away": "BOS"})
+    r = client.get("/predict", params={"home": "NYK", "away": "BOS", "date": "2024-11-01"})  # optional: exercise date
     assert r.status_code == 200
     body = r.json()
     assert body["home_team"] == "NYK" and body["away_team"] == "BOS"
-    assert body["prob_home_win"] >= 0 and body["prob_home_win"] <= 1
+    assert 0 <= body["prob_home_win"] <= 1
 
 def test_predict_bad_input(monkeypatch):
-    # make matchup_features raise the same error core would for unknown team
-    def boom(h, a): raise ValueError("unknown team")
+    # make matchup_features raise same error core would for unknown team
+    def boom(h, a, **kw):   # 👈 accept date=
+        raise ValueError("unknown team")
     monkeypatch.setattr(routes_mod, "matchup_features", boom, raising=True)
     monkeypatch.setattr(routes_mod, "load_model", lambda: DummyModel(), raising=True)
 
     client = TestClient(app)
-    r = client.get("/predict", params={"home": "NYK", "away": "??"})
+    r = client.get("/predict", params={"home": "NYK", "away": "??", "date": "2024-11-01"})  # optional: pass date
     assert r.status_code == 422
     assert "unknown" in r.json()["detail"].lower()

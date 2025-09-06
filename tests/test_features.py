@@ -45,12 +45,16 @@ def test_build_features_writes_file_and_columns(tmp_path, monkeypatch):
     assert len(df) > 0
 
     # required columns present
-    expected_cols = {"GAME_DATE", "home_team", "away_team", "delta_off", "delta_def", "home_win"}
+    expected_cols = {
+    "GAME_DATE", "home_team", "away_team",
+    "delta_off", "delta_def", "delta_rest", "delta_elo", "home_win",
+    }
     assert expected_cols.issubset(df.columns)
 
     # no NaNs in the delta columns after filtering
-    assert df["delta_off"].notna().all()
-    assert df["delta_def"].notna().all()
+    for col in ["delta_off", "delta_def", "delta_rest", "delta_elo"]:
+        assert df[col].notna().all()
+        assert pd.api.types.is_numeric_dtype(df[col])
 
     # dates sorted ascending (your code sorts by GAME_DATE before writing)
     assert df["GAME_DATE"].is_monotonic_increasing
