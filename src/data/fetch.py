@@ -2,11 +2,12 @@ from pathlib import Path
 import argparse
 import logging
 import pandas as pd
+from src import config
 
 from .br_client import fetch_season_html
 from .br_parse import parse_games
 
-OUT_DIR = Path("data_cache")
+OUT_DIR = config.DATA_DIR
 OUT_DIR.mkdir(parents=True, exist_ok=True)
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
