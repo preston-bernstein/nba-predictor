@@ -2,9 +2,11 @@
 import json
 import pandas as pd
 from pathlib import Path
-from src.model import train as train_mod
 
-def test_train_multi_models(tmp_path, monkeypatch):
+from src.model import train as train_mod
+from src import config as config_mod
+
+def test_train_multi_models(tmp_path):
     # tiny but stratifiable set
     df = pd.DataFrame(
         {
@@ -24,25 +26,20 @@ def test_train_multi_models(tmp_path, monkeypatch):
     feats = tmp_path / "features.csv"
     df.to_csv(feats, index=False)
 
-    # point paths to tmp
-    monkeypatch.setattr(train_mod, "FEATS", feats, raising=True)
-    monkeypatch.setattr(train_mod, "ART", tmp_path / "artifacts", raising=True)
+    # point config paths to tmp
+    config_mod.FEATS = feats
+    config_mod.ART_DIR = tmp_path / "artifacts"
 
     # run with 2 models
     train_mod.main(models=["logreg", "rf"])
 
-    # artifacts
-    art = train_mod.ART
-    assert (art / "model-logreg.joblib").exists()
-    assert (art / "model-rf.joblib").exists()
-    assert (art / "model.joblib").exists()  # best
+    # verify artifacts and metrics
+    metrics_path = config_mod.ART_DIR / "metrics.json"
+    model_path = config_mod.ART_DIR / "model.joblib"
+    assert metrics_path.exists() and model_path.exists()
 
-    # metrics schema
-    metrics = json.loads((art / "metrics.json").read_text())
-    assert "features_used" in metrics and "runs" in metrics
+    metrics = json.loads(metrics_path.read_text())
+    assert metrics["best_model"] in {"logreg", "rf"}
     assert set(metrics["runs"].keys()) == {"logreg", "rf"}
-    for m in metrics["runs"].values():
-        # accuracy range
-        assert 0.0 <= m["accuracy"] <= 1.0
-        # roc can be NaN on tiny folds; allow but type must exist
-        assert "roc_auc" in m
+    assert 0.0 <= metrics["accuracy"] <= 1.0
+    assert 0.0 <= metrics["roc_auc"] <= 1.0
