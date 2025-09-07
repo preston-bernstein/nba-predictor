@@ -1,11 +1,13 @@
+# tests/test_train.py
 import json
 import pandas as pd
 from pathlib import Path
 
 from src.model import train as train_mod
+from src import config as config_mod
 
 def test_train_writes_artifacts(tmp_path, monkeypatch):
-    # 1) Create a tiny fake features.csv
+    # tiny separable feature set (binary + stratifiable)
     df = pd.DataFrame(
         {
             "GAME_DATE": pd.to_datetime(
@@ -13,7 +15,6 @@ def test_train_writes_artifacts(tmp_path, monkeypatch):
             ),
             "home_team": ["NYK","GSW","BOS","LAL","MIA","CHI"],
             "away_team": ["BOS","LAL","NYK","GSW","CHI","MIA"],
-            # simple separable features
             "delta_off": [ 5,  3, -4, -2,  6, -5],
             "delta_def": [-1,  2,  3, -2, -3,  4],
             "home_win":  [ 1,  1,  0,  0,  1,  0],
@@ -22,20 +23,22 @@ def test_train_writes_artifacts(tmp_path, monkeypatch):
     feats_path = tmp_path / "features.csv"
     df.to_csv(feats_path, index=False)
 
-    # 2) Point the module to tmp paths
-    monkeypatch.setattr(train_mod, "FEATS", feats_path, raising=True)
-    monkeypatch.setattr(train_mod, "ART", tmp_path / "artifacts", raising=True)
+    art_dir = tmp_path / "artifacts"
 
-    # 3) Run training
+    # point the config used by train.py to tmp paths
+    monkeypatch.setattr(config_mod, "FEATS", feats_path, raising=True)
+    monkeypatch.setattr(config_mod, "ART_DIR", art_dir, raising=True)
+
+    # run default (logreg)
     train_mod.main()
 
-    # 4) Check artifacts
-    model_path = train_mod.ART / "model.joblib"
-    metrics_path = train_mod.ART / "metrics.json"
+    # artifacts exist
+    model_path = art_dir / "model.joblib"
+    metrics_path = art_dir / "metrics.json"
     assert model_path.exists()
     assert metrics_path.exists()
 
-    # 5) Check metrics schema + ranges
+    # flat, top-level metrics present and sane
     metrics = json.loads(metrics_path.read_text())
     for key in ["n_train", "n_test", "accuracy", "roc_auc"]:
         assert key in metrics
