@@ -26,12 +26,9 @@ class PredictQuery(BaseModel):
     date: Optional[str] = None  # ISO date string like "2024-11-01"
 
 class FeatureDeltas(BaseModel):
-    # make extras forbidden so we don’t silently accept wrong keys
     model_config = {"extra": "forbid"}
-
     delta_off: float
     delta_def: float
-    # optional extras (present when available)
     delta_rest: Optional[float] = None
     delta_elo: Optional[float] = None
 

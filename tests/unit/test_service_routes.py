@@ -5,7 +5,6 @@ from fastapi.testclient import TestClient
 from src.service.app import app
 from src.service import routes as routes_mod
 
-
 class DummyModel:
     # emulate scikit API; expect 2 features (off, def)
     n_features_in_ = 2
