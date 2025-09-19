@@ -1,4 +1,3 @@
-# tests/test_trainer.py
 from pathlib import Path
 
 import pandas as pd

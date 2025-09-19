@@ -1,4 +1,3 @@
-# tests/test_metrics.py
 import numpy as np
 
 from src.model import metrics as metrics_mod

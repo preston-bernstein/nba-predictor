@@ -1,4 +1,3 @@
-# tests/test_train_multi.py
 import json
 
 import pandas as pd

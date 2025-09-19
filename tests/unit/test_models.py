@@ -1,4 +1,3 @@
-# tests/test_models.py
 import pytest
 
 from src.model.models import REGISTRY, get_models

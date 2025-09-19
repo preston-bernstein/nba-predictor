@@ -1,4 +1,3 @@
-# tests/test_elo.py
 import pandas as pd
 
 from src.data.elo import EloConfig, add_elo

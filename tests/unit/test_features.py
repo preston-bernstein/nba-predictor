@@ -1,5 +1,3 @@
-# tests/test_features.py
-
 import pandas as pd
 
 from src.data import features as features_mod

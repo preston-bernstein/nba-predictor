@@ -1,4 +1,3 @@
-# tests/unit/test_normalizer.py
 import pytest
 
 from src.service.normalizer import (
