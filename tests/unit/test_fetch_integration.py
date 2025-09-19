@@ -1,4 +1,5 @@
 import pandas as pd
+
 from src.data import fetch as fetch_mod
 
 HTML = """
@@ -16,6 +17,7 @@ HTML = """
 </table>
 """
 
+
 def test_end_to_end_writes_csv(tmp_path, monkeypatch):
     # point OUT_DIR to tmp
     monkeypatch.setattr(fetch_mod, "OUT_DIR", tmp_path, raising=True)
@@ -32,4 +34,6 @@ def test_end_to_end_writes_csv(tmp_path, monkeypatch):
     df = pd.read_csv(out_csv, parse_dates=["GAME_DATE"])
     assert len(df) == 2
     assert df["game_id"].nunique() == 2
-    assert {"GAME_DATE","home_team","away_team","home_score","away_score","home_win"}.issubset(df.columns)
+    assert {"GAME_DATE", "home_team", "away_team", "home_score", "away_score", "home_win"}.issubset(
+        df.columns
+    )

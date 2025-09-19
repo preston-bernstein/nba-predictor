@@ -1,21 +1,24 @@
 from __future__ import annotations
+
+from collections.abc import Iterable
 from pathlib import Path
-from typing import Iterable, Mapping
+from typing import Any
 
 import joblib
+import numpy.typing as npt
 import pandas as pd
 
 from src import config
 from src.model import metrics as metrics_mod
-from src.model.models import get_models
-from src.model.select import pick_best, persist_best_model, write_metrics
 from src.model.datasets import (
+    baseline_stats,
     load_features,
     pick_features,
     time_split,
     to_xy,
-    baseline_stats,
 )
+from src.model.models import get_models
+from src.model.select import persist_best_model, pick_best, write_metrics
 
 
 class Trainer:
@@ -55,12 +58,12 @@ class Trainer:
     def train_models(
         self,
         model_names: Iterable[str],
-        X_tr,
-        y_tr,
-        X_te,
-        y_te,
-    ) -> dict[str, Mapping]:
-        runs: dict[str, Mapping] = {}
+        X_tr: npt.ArrayLike,
+        y_tr: npt.ArrayLike,
+        X_te: npt.ArrayLike,
+        y_te: npt.ArrayLike,
+    ) -> dict[str, dict[str, float]]:
+        runs: dict[str, dict[str, float]] = {}
         for name, model in get_models(model_names):
             m = metrics_mod.fit_and_score(model, X_tr, y_tr, X_te, y_te)
             # ensure artifact dir exists before dumping
@@ -69,7 +72,7 @@ class Trainer:
             runs[name] = m
         return runs
 
-    def run(self, model_names: Iterable[str] = ("logreg",)) -> dict:
+    def run(self, model_names: Iterable[str] = ("logreg",)) -> dict[str, Any]:
         # 1) prep
         _, used_feats, train_df, test_df = self.prepare_data()
         X_tr, y_tr = to_xy(train_df, used_feats)

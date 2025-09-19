@@ -1,26 +1,32 @@
-# tests/test_trainer.py
-import pandas as pd
 from pathlib import Path
+
+import pandas as pd
 
 from src.model.trainer import Trainer
 
+
 def _mini_features_df():
     # small but stratifiable set (ensures ROC-AUC defined)
-    return pd.DataFrame(
-        {
-            "GAME_DATE": pd.to_datetime(
-                ["2024-10-20","2024-10-21","2024-10-22","2024-10-23",
-                 "2024-10-24","2024-10-25","2024-10-26","2024-10-27"]
-            ),
-            "home_team": ["NYK","GSW","BOS","LAL","MIA","CHI","DAL","DEN"],
-            "away_team": ["BOS","LAL","NYK","GSW","CHI","MIA","DEN","DAL"],
-            "delta_off": [ 5, 3,-4,-2, 6,-5, 2,-1],
-            "delta_def": [-1,2, 3,-2,-3, 4, 0, 1],
-            "delta_rest":[ 1,0, 2, 1,-1, 0, 3,-2],
-            "delta_elo": [10,5,-8,-3,12,-6, 4,-2],
-            "home_win":  [ 1, 1, 0, 0, 1, 0, 1, 0],
-        }
-    )
+    return pd.DataFrame({
+        "GAME_DATE": pd.to_datetime([
+            "2024-10-20",
+            "2024-10-21",
+            "2024-10-22",
+            "2024-10-23",
+            "2024-10-24",
+            "2024-10-25",
+            "2024-10-26",
+            "2024-10-27",
+        ]),
+        "home_team": ["NYK", "GSW", "BOS", "LAL", "MIA", "CHI", "DAL", "DEN"],
+        "away_team": ["BOS", "LAL", "NYK", "GSW", "CHI", "MIA", "DEN", "DAL"],
+        "delta_off": [5, 3, -4, -2, 6, -5, 2, -1],
+        "delta_def": [-1, 2, 3, -2, -3, 4, 0, 1],
+        "delta_rest": [1, 0, 2, 1, -1, 0, 3, -2],
+        "delta_elo": [10, 5, -8, -3, 12, -6, 4, -2],
+        "home_win": [1, 1, 0, 0, 1, 0, 1, 0],
+    })
+
 
 def test_trainer_runs_and_persists_best(tmp_path: Path):
     feats = tmp_path / "features.csv"
@@ -55,12 +61,12 @@ def test_trainer_runs_and_persists_best(tmp_path: Path):
     # runs for both models recorded
     assert set(metrics["runs"].keys()) == {"logreg", "rf"}
 
+
 def test_trainer_respects_feature_preferences(tmp_path: Path):
     # Only provide two preferred features; trainer should still work
-    df = _mini_features_df()[[
-        "GAME_DATE","home_team","away_team",
-        "delta_off","delta_def","home_win"
-    ]]
+    df = _mini_features_df()[
+        ["GAME_DATE", "home_team", "away_team", "delta_off", "delta_def", "home_win"]
+    ]
     feats = tmp_path / "features.csv"
     df.to_csv(feats, index=False)
     art = tmp_path / "artifacts"

@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 import argparse
 from pathlib import Path
 
@@ -6,7 +7,7 @@ from src import config
 from src.model.trainer import Trainer
 
 
-def main(models: list[str] | None = None):
+def main(models: list[str] | None = None) -> None:
     models = models or ["logreg"]  # keep default behavior
     trainer = Trainer(
         feats_path=Path(config.FEATS),
@@ -21,7 +22,7 @@ def main(models: list[str] | None = None):
     print("Metrics ->", metrics)
 
 
-if __name__ == "__main__":
+if __name__ == "__main__": # pragma: no cover
     ap = argparse.ArgumentParser()
     ap.add_argument(
         "--models",

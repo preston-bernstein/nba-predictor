@@ -1,29 +1,28 @@
-import pandas as pd
 import joblib
+import pandas as pd
+from pytest import raises
 
 from src.service import deps as deps_mod
 
 
 def _mini_games_unsorted():
     # two rows out of order on purpose
-    return pd.DataFrame(
-        [
-            dict(
-                GAME_DATE="2024-10-02",
-                home_team="BOS",
-                home_score=101,
-                away_team="NYK",
-                away_score=99,
-            ),
-            dict(
-                GAME_DATE="2024-10-01",
-                home_team="NYK",
-                home_score=100,
-                away_team="BOS",
-                away_score=98,
-            ),
-        ]
-    )
+    return pd.DataFrame([
+        dict(
+            GAME_DATE="2024-10-02",
+            home_team="BOS",
+            home_score=101,
+            away_team="NYK",
+            away_score=99,
+        ),
+        dict(
+            GAME_DATE="2024-10-01",
+            home_team="NYK",
+            home_score=100,
+            away_team="BOS",
+            away_score=98,
+        ),
+    ])
 
 
 def test_load_games_reads_sorts_and_caches(tmp_path, monkeypatch):
@@ -95,15 +94,15 @@ def test_matchup_features_wires_core_and_handles_return(monkeypatch):
 
 
 def test_matchup_features_propagates_domain_errors(monkeypatch):
+    # Make sure there are no games so deps hits the domain path
     monkeypatch.setattr(deps_mod, "load_games_through", lambda date: pd.DataFrame(), raising=True)
 
+    # Force the core to raise the domain error we want to see bubble up
     def boom(df, h, a):
         raise ValueError("unknown team")
 
     monkeypatch.setattr(deps_mod.core, "compute_matchup_deltas", boom, raising=True)
 
-    try:
+    # Assert the error propagates (case-insensitive match on message)
+    with raises(ValueError, match=r"(?i)unknown"):
         deps_mod.matchup_features("NYK", "???")
-        assert False, "expected ValueError to propagate"
-    except ValueError as e:
-        assert "unknown" in str(e)
