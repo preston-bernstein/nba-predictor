@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier
+from sklearn.linear_model import LogisticRegression
 
 # A simple registry so it's easy to add/swap models later.
 REGISTRY = {
@@ -16,6 +16,7 @@ REGISTRY = {
         n_jobs=-1,
     ),
 }
+
 
 def get_models(requested: list[str]):
     """

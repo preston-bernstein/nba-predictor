@@ -1,7 +1,7 @@
 """Training metrics and scoring utilities."""
 
-
 from __future__ import annotations
+
 import numpy as np
 from sklearn.metrics import accuracy_score, roc_auc_score
 
@@ -13,11 +13,7 @@ def fit_and_score(model, X_tr, y_tr, X_te, y_te) -> dict:
     y_hat = (y_prob >= 0.5).astype(int)
 
     # metrics
-    if len(np.unique(y_te)) == 2:
-        roc_auc = float(roc_auc_score(y_te, y_prob))
-    else:
-        # fallback when only one class in test set
-        roc_auc = 0.5
+    roc_auc = float(roc_auc_score(y_te, y_prob)) if len(np.unique(y_te)) == 2 else 0.5
 
     return {
         "n_train": int(len(y_tr)),

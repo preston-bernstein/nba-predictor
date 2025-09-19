@@ -1,13 +1,17 @@
 from __future__ import annotations
-import ast, sys, argparse
-from pathlib import Path
+
+import argparse
+import ast
+import sys
 import xml.etree.ElementTree as ET
 from collections import defaultdict
+from pathlib import Path
+
 
 def function_spans(path: Path):
     src = path.read_text(encoding="utf-8", errors="ignore")
     mod = ast.parse(src, filename=str(path))
-    spans: list[tuple[int,int,str]] = []
+    spans: list[tuple[int, int, str]] = []
     for node in ast.walk(mod):
         if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
             start = getattr(node, "lineno", None)
@@ -17,11 +21,13 @@ def function_spans(path: Path):
     spans.sort()
     return spans
 
+
 def assign_func(spans, lineno):
     for s, e, n in spans:
         if s <= lineno <= e:
             return n
     return "<module>"
+
 
 def compress_ranges(nums: list[int]) -> str:
     out = []
@@ -38,8 +44,11 @@ def compress_ranges(nums: list[int]) -> str:
         out.append((start, prev))
     return ", ".join(f"{a}" if a == b else f"{a}-{b}" for a, b in out)
 
+
 def main():
-    ap = argparse.ArgumentParser(description="Report uncovered lines and branches grouped by function.")
+    ap = argparse.ArgumentParser(
+        description="Report uncovered lines and branches grouped by function."
+    )
     ap.add_argument("--xml", default="coverage.xml", help="Path to coverage XML")
     ap.add_argument("--mode", choices=["lines", "branches", "both"], default="both")
     args = ap.parse_args()
@@ -102,11 +111,14 @@ def main():
             if missed:
                 print(f"  - {fn}: missed lines -> {compress_ranges(missed)}")
             if bmiss:
-                items = ", ".join(f"{ln} ({c}/{t})" for ln,(c,t) in sorted(bmiss.items()))
+                items = ", ".join(f"{ln} ({c}/{t})" for ln, (c, t) in sorted(bmiss.items()))
                 print(f"  - {fn}: partial branches -> {items}")
 
     if not printed_any:
-        print("No uncovered lines/branches detected (line coverage perfect; branch coverage may be 100%).")
+        print(
+            "No uncovered lines/branches detected (line coverage perfect; branch coverage may be 100%)."
+        )
+
 
 if __name__ == "__main__":
     main()

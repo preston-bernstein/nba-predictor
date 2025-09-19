@@ -19,10 +19,11 @@ COV_FLAGS = --cov=src --cov-branch --cov-context=test --cov-fail-under=$(COV_MIN
 # ---- Phony ----
 .PHONY: default help pipeline fetch features train train-all \
         test test-verbose test-parallel \
-        test-cov test-cov-html test-cov-annotate test-cov-json test-cov-diff test-cov-gaps \
+        test-cov test-cov-html test-cov-annotate test-cov-json test-cov-diff test-cov-gaps test-cov-gate \
         cov-open cov-clean \
         serve clean rebuild all \
-        dev dev-requirements lint type fmt
+        dev dev-requirements lint type fmt \
+		hooks check ci precommit
 
 default: test
 
@@ -46,11 +47,26 @@ help:
 dev:
 	$(PY) -m pip install -U pip
 	$(PY) -m pip install -e '.[dev]'
-	@if command -v pre-commit >/dev/null 2>&1; then pre-commit install; fi
+	@if command -v pre-commit >/dev/null 2>&1 && [ -f .pre-commit-config.yaml ]; then pre-commit install; else echo "pre-commit skipped (missing or not installed)"; fi
 
 dev-requirements:
 	$(PY) -m pip install -U pip pip-tools
 	pip-compile --extra dev pyproject.toml -o requirements-dev.txt
+
+# ---------- Deployment ----------
+
+# Local gate before push
+check: fmt lint type test-cov-gate
+
+# CI gate (add diff-cover if you like)
+ci: fmt lint type test-cov-gate test-cov-diff
+
+# Run your pre-commit hooks over the whole repo
+precommit:
+	pre-commit run --all-files
+
+hooks:
+	@if [ -f .pre-commit-config.yaml ]; then pre-commit run --all-files; else echo ".pre-commit-config.yaml not found"; exit 1; fi
 
 # ---------- Pipeline ----------
 pipeline: fetch features train
@@ -116,6 +132,15 @@ test-cov-gaps: $(MODEL)
 	coverage erase
 	pytest -q $(COV_FLAGS) --cov-report=xml:coverage.xml
 	$(PY) scripts/coverage_gaps.py
+
+test-cov-gate: $(MODEL)
+	coverage erase
+	pytest -vv -ra -n auto \
+	  --cov=src --cov-branch --cov-context=test \
+	  --cov-report=term-missing:skip-covered \
+	  --cov-report=html:coverage_html \
+	  --cov-report=xml:coverage.xml \
+	  --cov-fail-under=$${COV_MIN:-95}
 
 cov-open:
 	@open coverage_html/index.html 2>/dev/null || $(PY) -c "import webbrowser; webbrowser.open('coverage_html/index.html')"

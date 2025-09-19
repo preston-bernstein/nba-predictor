@@ -1,7 +1,9 @@
 # tests/test_features.py
+
 import pandas as pd
-from pathlib import Path
+
 from src.data import features as features_mod
+
 
 def test_build_features_writes_file_and_columns(tmp_path, monkeypatch):
     # ---- 1) make a tiny synthetic games.csv with enough history ----
@@ -10,16 +12,14 @@ def test_build_features_writes_file_and_columns(tmp_path, monkeypatch):
     for i, d in enumerate(dates):
         home, away = ("NYK", "BOS") if i % 2 == 0 else ("BOS", "NYK")
         home_score, away_score = 100 + i, 95 + i
-        rows.append(
-            {
-                "GAME_DATE": d,
-                "home_team": home,
-                "home_score": home_score,
-                "away_team": away,
-                "away_score": away_score,
-                "home_win": int(home_score > away_score),
-            }
-        )
+        rows.append({
+            "GAME_DATE": d,
+            "home_team": home,
+            "home_score": home_score,
+            "away_team": away,
+            "away_score": away_score,
+            "home_win": int(home_score > away_score),
+        })
     games = pd.DataFrame(rows)
 
     in_path = tmp_path / "games.csv"
@@ -39,7 +39,13 @@ def test_build_features_writes_file_and_columns(tmp_path, monkeypatch):
     assert len(df) > 0
 
     expected_cols = {
-        "GAME_DATE", "home_team", "away_team",
-        "delta_off", "delta_def", "delta_rest", "delta_elo", "home_win",
+        "GAME_DATE",
+        "home_team",
+        "away_team",
+        "delta_off",
+        "delta_def",
+        "delta_rest",
+        "delta_elo",
+        "home_win",
     }
     assert expected_cols.issubset(df.columns)

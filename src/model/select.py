@@ -1,15 +1,15 @@
 """Model selection & persistence helpers."""
 
-
 from __future__ import annotations
-from pathlib import Path
+
 import json
 import shutil
-from typing import Dict, Tuple
+from pathlib import Path
 
 from .metrics import selection_key  # (roc_auc (NaN→-inf), accuracy)
 
-def pick_best(runs: Dict[str, dict]) -> Tuple[str, dict]:
+
+def pick_best(runs: dict[str, dict]) -> tuple[str, dict]:
     """
     Given a mapping {model_name -> metrics}, return (best_name, best_metrics)
     using selection_key: ROC AUC first (higher is better, NaN treated as -inf),
@@ -19,6 +19,7 @@ def pick_best(runs: Dict[str, dict]) -> Tuple[str, dict]:
         raise ValueError("runs is empty")
     best_name, best_metrics = max(runs.items(), key=lambda kv: selection_key(kv[1]))
     return best_name, best_metrics
+
 
 def persist_best_model(art_dir: Path, best_name: str) -> Path:
     """
@@ -32,6 +33,7 @@ def persist_best_model(art_dir: Path, best_name: str) -> Path:
     art_dir.mkdir(parents=True, exist_ok=True)
     shutil.copyfile(src, dst)
     return dst
+
 
 def write_metrics(art_dir: Path, metrics: dict) -> Path:
     """

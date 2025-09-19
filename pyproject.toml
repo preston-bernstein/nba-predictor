@@ -39,7 +39,6 @@ dev = [
   "pre-commit>=3.7",
   "types-requests",
   "pip-tools",
-  "coverage[toml]>=7.6",
   "diff-cover>=9.0",
 ]
 
@@ -68,6 +67,9 @@ target-version = "py310"
 lint.select = ["E", "F", "I", "UP", "B", "SIM"]
 lint.ignore = ["E203"]
 format.preview = true
+
+[tool.ruff.lint.isort]
+known-first-party = ["src"]
 
 [tool.mypy]
 python_version = "3.10"

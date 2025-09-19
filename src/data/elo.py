@@ -1,14 +1,17 @@
 from __future__ import annotations
-from dataclasses import dataclass
-from typing import Dict
+
 import math
+from dataclasses import dataclass
+
 import pandas as pd
+
 
 @dataclass(frozen=True)
 class EloConfig:
-    base: float = 1500.0     # initial rating for unseen teams
-    k: float = 20.0          # update magnitude
-    home_adv: float = 50.0   # rating points for home advantage (used in EXPECTATION only)
+    base: float = 1500.0  # initial rating for unseen teams
+    k: float = 20.0  # update magnitude
+    home_adv: float = 50.0  # rating points for home advantage (used in EXPECTATION only)
+
 
 def _expect_home(r_home: float, r_away: float, hadv: float) -> float:
     """
@@ -16,6 +19,7 @@ def _expect_home(r_home: float, r_away: float, hadv: float) -> float:
     E_home = 1 / (1 + 10^((R_away - (R_home + HAdv))/400))
     """
     return 1.0 / (1.0 + math.pow(10.0, (r_away - (r_home + hadv)) / 400.0))
+
 
 def add_elo(games: pd.DataFrame, cfg: EloConfig = EloConfig()) -> pd.DataFrame:
     """
@@ -31,7 +35,7 @@ def add_elo(games: pd.DataFrame, cfg: EloConfig = EloConfig()) -> pd.DataFrame:
     # sort and copy to avoid mutating caller data
     g = games.sort_values("GAME_DATE").reset_index(drop=True).copy()
 
-    ratings: Dict[str, float] = {}
+    ratings: dict[str, float] = {}
     home_pre, away_pre = [], []
 
     for _, row in g.iterrows():

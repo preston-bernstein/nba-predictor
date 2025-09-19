@@ -1,21 +1,22 @@
 from __future__ import annotations
+
+from collections.abc import Iterable, Mapping
 from pathlib import Path
-from typing import Iterable, Mapping
 
 import joblib
 import pandas as pd
 
 from src import config
 from src.model import metrics as metrics_mod
-from src.model.models import get_models
-from src.model.select import pick_best, persist_best_model, write_metrics
 from src.model.datasets import (
+    baseline_stats,
     load_features,
     pick_features,
     time_split,
     to_xy,
-    baseline_stats,
 )
+from src.model.models import get_models
+from src.model.select import persist_best_model, pick_best, write_metrics
 
 
 class Trainer:

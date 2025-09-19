@@ -1,13 +1,14 @@
 from __future__ import annotations
+
 from functools import lru_cache
-from typing import Iterable, Set
 
 import joblib
 import pandas as pd
 
 from src import config
+
 from . import core
-from .normalizer import normalize_team, TeamNormalizeError, CANON
+from .normalizer import TeamNormalizeError, canonical_name, normalize_team
 
 
 @lru_cache(maxsize=1)
@@ -32,14 +33,14 @@ def load_games_through(date: str | None):
     return df.loc[df["GAME_DATE"] < pd.to_datetime(date)].copy()
 
 
-def _teams_from_df(df: pd.DataFrame) -> Set[str]:
+def _teams_from_df(df: pd.DataFrame) -> set[str]:
     cols = set(df.columns)
     if {"home_team", "away_team"}.issubset(cols):
         return set(df["home_team"]).union(df["away_team"])
     return set()
 
 
-def _resolve_for_df(input_team: str, teams_in_data: Set[str]) -> str:
+def _resolve_for_df(input_team: str, teams_in_data: set[str]) -> str:
     """
     Normalize any input to canonical code. If the dataframe has known labels,
     map to those; if the set is empty, just return the code (don't block tests).
@@ -48,7 +49,7 @@ def _resolve_for_df(input_team: str, teams_in_data: Set[str]) -> str:
         code = normalize_team(input_team)  # may raise
     except TeamNormalizeError as e:
         # tests check for 'unknown' in the message, lowercase to be safe
-        raise ValueError(str(e).lower())
+        raise ValueError(str(e).lower()) from None
 
     if not teams_in_data:
         # Nothing to validate against (e.g., filtered dataset in tests) — return code
@@ -57,13 +58,14 @@ def _resolve_for_df(input_team: str, teams_in_data: Set[str]) -> str:
     if code in teams_in_data:
         return code
 
-    full = CANON.get(code, code)
+    full = canonical_name(code)
     if full in teams_in_data:
         return full
 
     # we *do* have teams in data, but neither code nor full name present
-    raise ValueError(f"unknown team '{input_team}' in historical data; "
-                     f"available={sorted(teams_in_data)[:5]}...")
+    raise ValueError(
+        f"unknown team '{input_team}' in historical data; available={sorted(teams_in_data)[:5]}..."
+    )
 
 
 def matchup_features(
