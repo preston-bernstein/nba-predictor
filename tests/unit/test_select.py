@@ -1,9 +1,10 @@
-import math
-from pathlib import Path
 import json
+from pathlib import Path
+
 import pytest
 
-from src.model.select import pick_best, persist_best_model, write_metrics
+from src.model.select import persist_best_model, pick_best, write_metrics
+
 
 def test_pick_best_prefers_auc_then_accuracy():
     runs = {
@@ -15,9 +16,11 @@ def test_pick_best_prefers_auc_then_accuracy():
     assert best == "a"
     assert met["roc_auc"] == 0.55
 
+
 def test_pick_best_raises_on_empty():
     with pytest.raises(ValueError):
         pick_best({})
+
 
 def test_persist_best_model(tmp_path: Path):
     art = tmp_path / "artifacts"
@@ -26,6 +29,7 @@ def test_persist_best_model(tmp_path: Path):
     dst = persist_best_model(art, "abc")
     assert dst.exists()
     assert dst.name == "model.joblib"
+
 
 def test_write_metrics(tmp_path: Path):
     art = tmp_path / "artifacts"

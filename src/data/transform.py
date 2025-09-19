@@ -1,10 +1,13 @@
 from __future__ import annotations
+
 from typing import Final
+
 import pandas as pd
 
-from .elo import add_elo
 # NEW: use the service normalizer so train-time matches serve-time
-from src.service.normalizer import normalize_team, TeamNormalizeError
+from src.service.normalizer import TeamNormalizeError, normalize_team
+
+from .elo import add_elo
 
 ROLL: Final[int] = 10
 MINP: Final[int] = 3
@@ -15,13 +18,12 @@ def _canonize_team_cols(g: pd.DataFrame) -> pd.DataFrame:
     Normalize team identifiers to canonical 3-letter codes (e.g., 'NYK', 'BOS').
     Fail loudly on unknown teams so we don't bake bad rows into training.
     """
-    g = g.copy()
 
     def _norm(v: str) -> str:
         try:
             return normalize_team(v)
-        except TeamNormalizeError:
-            raise ValueError(f"Unknown team in input games: {v!r}")
+        except TeamNormalizeError as err:
+            raise ValueError(f"Unknown team in input games: {v!r}") from err
 
     g["home_team"] = g["home_team"].map(_norm)
     g["away_team"] = g["away_team"].map(_norm)

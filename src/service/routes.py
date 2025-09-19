@@ -2,17 +2,17 @@
 
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends
 import numpy as np
+from fastapi import APIRouter, Depends
 
 from . import deps
 from .errors import unprocessable  # tiny helper -> HTTP 422
 from .schemas import (
+    ErrorResponse,
     HealthResponse,
-    TeamListResponse,
     PredictQuery,
     PredictResponse,
-    ErrorResponse,
+    TeamListResponse,
 )
 
 router = APIRouter()
@@ -42,7 +42,7 @@ def teams() -> TeamListResponse:
     response_model=PredictResponse,
     responses={422: {"model": ErrorResponse}},
 )
-def predict(q: PredictQuery = Depends()) -> PredictResponse:
+def predict(q: PredictQuery = Depends()) -> PredictResponse:  # noqa: B008
     """
     Normalize/validate teams inside deps.matchup_features, compute deltas,
     enforce deterministic feature order, and surface domain/history issues as 422.
@@ -52,7 +52,7 @@ def predict(q: PredictQuery = Depends()) -> PredictResponse:
         deltas = matchup_features(q.home, q.away, date=q.date, return_dict=True)
     except ValueError as e:
         # Domain/history/type errors surface as 422, not 500
-        raise unprocessable(str(e))
+        raise unprocessable(str(e)) from e
 
     model = load_model()
 
