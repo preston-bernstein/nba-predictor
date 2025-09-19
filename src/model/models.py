@@ -2,8 +2,11 @@
 
 from __future__ import annotations
 
-from sklearn.linear_model import LogisticRegression
+from collections.abc import Callable, Iterable
+
+from sklearn.base import BaseEstimator
 from sklearn.ensemble import RandomForestClassifier
+from sklearn.linear_model import LogisticRegression
 
 # A simple registry so it's easy to add/swap models later.
 REGISTRY = {
@@ -17,14 +20,16 @@ REGISTRY = {
     ),
 }
 
-def get_models(requested: list[str]):
+
+def get_models(requested: Iterable[str]) -> list[tuple[str, BaseEstimator]]:
     """
     Return (name, instance) pairs for the requested model identifiers.
     Raises ValueError on unknown names. Keeps requested order.
     """
-    out = []
+    out: list[tuple[str, BaseEstimator]] = []
     for name in requested:
-        if name not in REGISTRY:
+        factory: Callable[[], BaseEstimator] | None = REGISTRY.get(name)
+        if factory is None:
             raise ValueError(f"unknown model '{name}'. available: {sorted(REGISTRY)}")
-        out.append((name, REGISTRY[name]()))
+        out.append((name, factory()))
     return out

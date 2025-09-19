@@ -1,5 +1,6 @@
-import time
 import logging
+import time
+
 import requests
 
 HEADERS = {
@@ -9,6 +10,7 @@ HEADERS = {
         "Chrome/126.0.0.0 Safari/537.36"
     )
 }
+
 
 def fetch_season_html(end_year: int, retries: int = 3, timeout: int = 60) -> str:
     """Fetch the Basketball-Reference season index HTML (e.g. 2024 -> 2023–24 season)."""
@@ -21,9 +23,6 @@ def fetch_season_html(end_year: int, retries: int = 3, timeout: int = 60) -> str
             return resp.text
         except Exception as e:
             err = e
-            logging.warning(
-                "fetch %s failed (attempt %d/%d): %s",
-                end_year, attempt, retries, e
-            )
+            logging.warning("fetch %s failed (attempt %d/%d): %s", end_year, attempt, retries, e)
             time.sleep(1.5 * attempt)
     raise RuntimeError(f"could not fetch season {end_year}") from err

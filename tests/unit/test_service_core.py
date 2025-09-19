@@ -1,5 +1,11 @@
+import numbers
+
 import pandas as pd
+from pytest import raises
+
 from src.service import core as core_mod
+from src.service.core import compute_matchup_deltas
+
 
 def make_games():
     # minimal data with enough history (min_periods=3) for both teams
@@ -22,6 +28,7 @@ def make_games():
         )
     return pd.DataFrame(rows)
 
+
 def test_compute_matchup_deltas_ok():
     games = make_games()
     deltas = core_mod.compute_matchup_deltas(games, "NYK", "BOS")
@@ -29,24 +36,53 @@ def test_compute_matchup_deltas_ok():
     assert "delta_off" in deltas and "delta_def" in deltas
     assert isinstance(deltas["delta_off"], float)
     assert isinstance(deltas["delta_def"], float)
-    # optional keys may or may not be there; if present, they’re floats
+    # optional keys may or may not be there; if present, they’re numbers.Real
     for k in ("delta_rest", "delta_elo"):
         if k in deltas:
-            assert isinstance(deltas[k], float) or isinstance(deltas[k], int)
+            assert isinstance(deltas[k], numbers.Real)
+
 
 def test_compute_matchup_deltas_unknown_team():
     games = make_games()
-    try:
+    # (?i) makes the match case-insensitive
+    with raises(ValueError, match=r"(?i)unknown"):
         core_mod.compute_matchup_deltas(games, "NYK", "???")
-        assert False, "expected ValueError for unknown team"
-    except ValueError as e:
-        assert "unknown" in str(e)
+
 
 def test_compute_matchup_deltas_insufficient_history():
     # too few games to satisfy rolling min_periods
     short = make_games().iloc[:3].copy()
-    try:
+    with raises(ValueError) as e:
         core_mod.compute_matchup_deltas(short, "NYK", "BOS")
-        assert False, "expected ValueError for insufficient history"
-    except ValueError as e:
-        assert "insufficient" in str(e)
+    assert "insufficient" in str(e.value).lower()
+
+
+def _make_games_with_spacing():
+    rows = []
+    dates = pd.to_datetime([
+        "2024-10-01",
+        "2024-10-03",
+        "2024-10-05",
+        "2024-10-08",
+        "2024-10-10",
+        "2024-10-12",
+        "2024-10-15",
+        "2024-10-18",
+    ])
+    for i, d in enumerate(dates):
+        home, away = ("NYK", "BOS") if i % 2 == 0 else ("BOS", "NYK")
+        rows.append({
+            "GAME_DATE": d,
+            "home_team": home,
+            "home_score": 100 + i,
+            "away_team": away,
+            "away_score": 90 + i,
+        })
+    return pd.DataFrame(rows)
+
+
+def test_compute_matchup_deltas_includes_optional_fields():
+    games = _make_games_with_spacing()
+    deltas = compute_matchup_deltas(games, "NYK", "BOS")
+    assert {"delta_off", "delta_def"} <= set(deltas)
+    assert "delta_rest" in deltas and "delta_elo" in deltas

@@ -1,7 +1,9 @@
 from io import StringIO
+
 import pandas as pd
 
 REQUIRED_COLS = {"Date", "Visitor/Neutral", "Home/Neutral"}
+
 
 def parse_games(html: str) -> pd.DataFrame:
     """Parse a Basketball-Reference season index page into a tidy games DataFrame."""
@@ -42,10 +44,6 @@ def parse_games(html: str) -> pd.DataFrame:
     )
 
     # De-dupe on game_id
-    out = (
-        out.drop_duplicates(subset=["game_id"])
-           .sort_values("GAME_DATE")
-           .reset_index(drop=True)
-    )
+    out = out.drop_duplicates(subset=["game_id"]).sort_values("GAME_DATE").reset_index(drop=True)
 
     return out

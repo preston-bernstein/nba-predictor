@@ -1,15 +1,17 @@
-# tests/test_service_routes.py
 import pandas as pd
 from fastapi.testclient import TestClient
 
-from src.service.app import app
 from src.service import routes as routes_mod
+from src.service.app import app
+
 
 class DummyModel:
     # emulate scikit API; expect 2 features (off, def)
     n_features_in_ = 2
+
     def predict_proba(self, X):
         import numpy as np
+
         # simple deterministic mapping so the test can assert shape
         p = 1 / (1 + np.exp(-X[:, 0] * 0.1 + X[:, 1] * 0.05))
         return np.vstack([1 - p, p]).T
@@ -38,8 +40,12 @@ def test_predict_ok(monkeypatch):
     monkeypatch.setattr(
         routes_mod,
         "matchup_features",
-        lambda h, a, **kw: {"delta_off": 1.5, "delta_def": -0.5,
-                            "delta_rest": 0.0, "delta_elo": 2.0},
+        lambda h, a, **kw: {
+            "delta_off": 1.5,
+            "delta_def": -0.5,
+            "delta_rest": 0.0,
+            "delta_elo": 2.0,
+        },
         raising=True,
     )
     # stub model
@@ -58,10 +64,12 @@ def test_predict_ok(monkeypatch):
     assert isinstance(body["prob_home_win"], float)
     assert 0.0 <= body["prob_home_win"] <= 1.0
 
+
 def test_predict_bad_input(monkeypatch):
     # make matchup_features raise domain error (propagates as 422)
     def boom(h, a, **kw):
         raise ValueError("unknown team")
+
     monkeypatch.setattr(routes_mod, "matchup_features", boom, raising=True)
 
     client = TestClient(app)
