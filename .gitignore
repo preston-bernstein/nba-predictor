@@ -1,0 +1,64 @@
+# ---------------- Python artifacts ----------------
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+
+# ---------------- Packaging / build ----------------
+*.egg
+*.egg-info/
+.eggs/
+build/
+dist/
+wheelhouse/
+__pypackages__/
+
+# ---------------- Virtual envs ----------------
+.venv/
+env/
+venv/
+ENV/
+
+# ---------------- Tool caches ----------------
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+.hypothesis/
+.cache/
+.tox/
+.nox/
+
+# ---------------- Coverage / reports ----------------
+.coverage
+.coverage.*
+htmlcov/
+coverage_html/
+coverage_annotate/
+coverage.xml
+coverage.json
+report/
+
+# ---------------- IDE / editors ----------------
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+.python-version
+
+# ---------------- Env files ----------------
+.env
+.env.*
+.envrc
+
+# ---------------- Data & artifacts ----------------
+data_cache/
+artifacts/
+**/.ipynb_checkpoints/
+
+# ---------------- Logs ----------------
+*.log
+*.out
+*.err
