@@ -13,7 +13,7 @@ def function_spans(path: Path):
     mod = ast.parse(src, filename=str(path))
     spans: list[tuple[int, int, str]] = []
     for node in ast.walk(mod):
-        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+        if isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef):
             start = getattr(node, "lineno", None)
             end = getattr(node, "end_lineno", None) or start
             if start is not None and end is not None:
@@ -116,7 +116,8 @@ def main():
 
     if not printed_any:
         print(
-            "No uncovered lines/branches detected (line coverage perfect; branch coverage may be 100%)."
+            "No uncovered lines/branches detected "
+            "(line coverage perfect; branch coverage may be 100%)."
         )
 
 

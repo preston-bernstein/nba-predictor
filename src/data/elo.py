@@ -21,12 +21,15 @@ def _expect_home(r_home: float, r_away: float, hadv: float) -> float:
     return 1.0 / (1.0 + math.pow(10.0, (r_away - (r_home + hadv)) / 400.0))
 
 
-def add_elo(games: pd.DataFrame, cfg: EloConfig = EloConfig()) -> pd.DataFrame:
+def add_elo(games: pd.DataFrame, cfg: EloConfig | None = None) -> pd.DataFrame:
     """
     Compute pre-game Elo ratings per matchup (no leakage).
     Requires columns: GAME_DATE, home_team, home_score, away_team, away_score
     Returns a copy sorted by GAME_DATE with: home_elo_pre, away_elo_pre
     """
+    # Avoid B008: instantiate inside the function
+    cfg = EloConfig() if cfg is None else cfg
+
     required = {"GAME_DATE", "home_team", "home_score", "away_team", "away_score"}
     missing = required - set(games.columns)
     if missing:
@@ -47,7 +50,7 @@ def add_elo(games: pd.DataFrame, cfg: EloConfig = EloConfig()) -> pd.DataFrame:
             hs = float(row["home_score"])
             as_ = float(row["away_score"])
         except Exception as e:
-            raise ValueError(f"Non-numeric score at {row.get('GAME_DATE')}: {e}")
+            raise ValueError(f"Non-numeric score at {row.get('GAME_DATE')}: {e}") from e
 
         rh = ratings.get(h, cfg.base)
         ra = ratings.get(a, cfg.base)

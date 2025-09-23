@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 import os
+
 import pytest
+
 
 @pytest.fixture(autouse=True, scope="session")
 def _determinism():
@@ -14,6 +16,7 @@ def _determinism():
     except Exception:
         pass
     yield
+
 
 @pytest.fixture(autouse=True, scope="session")
 def _isolated_fs(tmp_path_factory):

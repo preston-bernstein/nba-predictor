@@ -1,4 +1,5 @@
+from __future__ import annotations
+
 """Web service layer (FastAPI)."""
 
-# Avoid importing app/router here to prevent accidental side effects during library use.
-__all__ = []
+__all__: list[str] = ["routes", "deps", "normalizer"]
