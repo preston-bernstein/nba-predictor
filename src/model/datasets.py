@@ -5,9 +5,10 @@ from __future__ import annotations
 from pathlib import Path
 
 import numpy as np
+import numpy.typing as npt
 import pandas as pd
 
-REQUIRED_COLS = {"GAME_DATE", "home_win"}
+REQUIRED_COLS: set[str] = {"GAME_DATE", "home_win"}
 
 
 def load_features(path: Path | str) -> pd.DataFrame:
@@ -43,14 +44,14 @@ def time_split(
 
 def to_xy(
     df: pd.DataFrame, features: list[str], target: str = "home_win"
-) -> tuple[np.ndarray, np.ndarray]:
+) -> tuple[npt.NDArray[np.float64], npt.NDArray[np.int_]]:
     """Convert a frame to (X, y) numpy arrays."""
-    X = df[features].values
-    y = df[target].values
+    X: npt.NDArray[np.float64] = df[features].to_numpy(dtype=np.float64, copy=False)
+    y: npt.NDArray[np.int_] = df[target].to_numpy(dtype=np.int_, copy=False)
     return X, y
 
 
-def baseline_stats(test_df: pd.DataFrame) -> dict:
+def baseline_stats(test_df: pd.DataFrame) -> dict[str, float]:
     """Compute simple test-fold baselines."""
     rate = float(test_df["home_win"].mean())
     return {"baseline_home_rate": rate, "baseline_home_acc": rate}

@@ -106,5 +106,7 @@ module = [
   "sklearn.*",
   "httpx.*",
   "bs4.*",
+  "joblib.*",
 ]
+
 ignore_missing_imports = true

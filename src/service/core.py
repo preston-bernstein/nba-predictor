@@ -8,7 +8,6 @@ from src.data.elo import add_elo
 ROLL = 10
 MINP = 3
 
-
 def _last_rest_days(df: pd.DataFrame, team: str) -> int | None:
     t = df[(df["home_team"] == team) | (df["away_team"] == team)].sort_values("GAME_DATE")
     if len(t) < 2:
@@ -45,7 +44,9 @@ def _team_form(df: pd.DataFrame, team: str) -> tuple[float, float] | None:
     return float(off), float(deff)
 
 
-def compute_matchup_deltas(df: pd.DataFrame, home_team: str, away_team: str) -> dict:
+def compute_matchup_deltas(
+    df: pd.DataFrame, home_team: str, away_team: str
+) -> dict[str, float]:
     """
     Pure domain logic: given a *pre-filtered* games dataframe (e.g., up to a date),
     compute matchup deltas for home vs away. Raises ValueError on bad input.
