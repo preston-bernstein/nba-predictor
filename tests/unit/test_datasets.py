@@ -31,6 +31,7 @@ def test_pick_features_raises_when_too_few():
         ds.pick_features(df, pref=["delta_off", "delta_def"], min_feats=2)
     assert "Not enough features" in str(exc.value)
 
+
 def test_time_split_shape():
     df = _mini_df()
     tr, te = ds.time_split(df, test_frac=0.25)

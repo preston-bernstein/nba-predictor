@@ -11,17 +11,20 @@ from src.service.normalizer import (
 try:
     from hypothesis import given, settings
     from hypothesis.strategies import lists, sampled_from, text
+
     HAVE_HYPOTHESIS = True
 except ImportError:  # pragma: no cover
     HAVE_HYPOTHESIS = False
 
 # ---- Helpers ---------------------------------------------------------------
 
+
 def variants(word: str):
     """Generate simple case variants to ensure case-insensitivity."""
     yield word.lower()
     yield word.upper()
     yield "".join(ch.lower() if i % 2 else ch.upper() for i, ch in enumerate(word))
+
 
 def with_noise(s: str):
     """Sprinkle benign punctuation and whitespace; normalizer should handle it."""
@@ -46,7 +49,9 @@ def with_noise(s: str):
             out.append(r)
     return out
 
+
 # ---- Tests: canonical codes pass-through -----------------------------------
+
 
 @pytest.mark.parametrize("code", sorted(CODES))
 def test_codes_pass_through(code):
@@ -54,7 +59,9 @@ def test_codes_pass_through(code):
     for v in variants(code):
         assert normalize_team(v) == code
 
+
 # ---- Tests: full names round-trip -----------------------------------------
+
 
 @pytest.mark.parametrize("full,code", sorted(BR_FULL.items()))
 def test_full_names_round_trip(full, code):
@@ -62,11 +69,14 @@ def test_full_names_round_trip(full, code):
     for noisy in with_noise(full):
         assert normalize_team(noisy) == code
 
+
 # ---- Tests: aliases map to valid codes ------------------------------------
+
 
 def test_all_aliases_point_to_valid_codes():
     for alias, target in ALIASES.items():
         assert target in CODES, f"Alias '{alias}' -> '{target}' is not a valid code"
+
 
 @pytest.mark.parametrize("alias,target", sorted(ALIASES.items()))
 def test_aliases_normalize(alias, target):
@@ -75,6 +85,7 @@ def test_aliases_normalize(alias, target):
         assert normalize_team(v) == target
     for noisy in with_noise(alias):
         assert normalize_team(noisy) == target
+
 
 # ---- Representative real-world examples -----------------------------------
 
@@ -100,13 +111,16 @@ EXAMPLES = [
     ("San Antonio", "SAS"),
 ]
 
+
 @pytest.mark.parametrize("raw,code", EXAMPLES)
 def test_examples_normalize(raw, code):
     assert normalize_team(raw) == code
     for noisy in with_noise(raw):
         assert normalize_team(noisy) == code
 
+
 # ---- Idempotence -----------------------------------------------------------
+
 
 @pytest.mark.parametrize(
     "input_str,expected",
@@ -122,7 +136,9 @@ def test_idempotent_normalization(input_str, expected):
     assert first == expected
     assert normalize_team(first) == expected
 
+
 # ---- Bad inputs ------------------------------------------------------------
+
 
 @pytest.mark.parametrize("bad", ["", "   ", "\n\t", "???", "Gotham Rogues", "Seattle Supersonics"])
 def test_unknown_team_raises(bad):
@@ -130,12 +146,15 @@ def test_unknown_team_raises(bad):
         normalize_team(bad)
     assert "Unknown team" in str(e.value)
 
+
 @pytest.mark.parametrize("bad", [None, 123, 3.14, object(), [], {}])
 def test_non_string_inputs_raise(bad):
     with pytest.raises(TeamNormalizeError):
         normalize_team(bad)  # type: ignore[arg-type]
 
+
 BENIGN_PUNCT = list(" -_.,!:/\\|—–")
+
 
 @settings(max_examples=120)
 @given(

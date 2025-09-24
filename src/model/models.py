@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Iterable
 
 from sklearn.base import BaseEstimator
 from sklearn.ensemble import RandomForestClassifier
@@ -21,7 +21,7 @@ REGISTRY = {
 }
 
 
-def get_models(requested: list[str]) -> list[tuple[str, BaseEstimator]]:
+def get_models(requested: Iterable[str]) -> list[tuple[str, BaseEstimator]]:
     """
     Return (name, instance) pairs for the requested model identifiers.
     Raises ValueError on unknown names. Keeps requested order.

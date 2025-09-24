@@ -12,11 +12,13 @@ from .elo import add_elo
 ROLL: Final[int] = 10
 MINP: Final[int] = 3
 
+
 def _canonize_team_cols(g: pd.DataFrame) -> pd.DataFrame:
     """
     Normalize team identifiers to canonical 3-letter codes (e.g., 'NYK', 'BOS').
     Fail loudly on unknown teams so we don't bake bad rows into training.
     """
+
     def _norm(v: str) -> str:
         try:
             return normalize_team(v)
@@ -26,6 +28,7 @@ def _canonize_team_cols(g: pd.DataFrame) -> pd.DataFrame:
     g["home_team"] = g["home_team"].map(_norm)
     g["away_team"] = g["away_team"].map(_norm)
     return g
+
 
 def team_game_rows(g: pd.DataFrame) -> pd.DataFrame:
     """Expand game rows into team-game rows (one per team per game)."""

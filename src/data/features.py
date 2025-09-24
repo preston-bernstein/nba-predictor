@@ -15,8 +15,10 @@ def build_features() -> None:
     feats.to_csv(OUT_PATH, index=False)
     print(f"Saved {len(feats):,} rows -> {OUT_PATH}")
 
+
 def _main() -> None:
     build_features()
+
 
 if __name__ == "__main__":
     _main()

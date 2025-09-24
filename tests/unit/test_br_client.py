@@ -31,6 +31,7 @@ def test_fetch_season_html_retries_and_succeeds(monkeypatch):
     assert "ok" in html
     assert calls["n"] == 3
 
+
 def test_fetch_season_html_gives_up(monkeypatch):
     def always_fail(url, headers=None, timeout=None):
         raise requests.Timeout("nope")

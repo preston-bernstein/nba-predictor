@@ -42,7 +42,7 @@ def teams() -> TeamListResponse:
     response_model=PredictResponse,
     responses={422: {"model": ErrorResponse}},
 )
-def predict(q: PredictQuery = Depends()) -> PredictResponse: # noqa: B008
+def predict(q: PredictQuery = Depends()) -> PredictResponse:  # noqa: B008
     """
     Normalize/validate teams inside deps.matchup_features, compute deltas,
     enforce deterministic feature order, and surface domain/history issues as 422.

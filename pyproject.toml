@@ -72,17 +72,15 @@ format.preview = true
 known-first-party = ["src"]
 
 [tool.mypy]
-python_version = "3.10"
-strict = true
-files = ["src"]
-mypy_path = ["src"]
-warn_unused_ignores = true
-warn_redundant_casts = true
-warn_return_any = true
-warn_unreachable = true
+python_version = "3.13"
+files = ["src", "scripts"]
+check_untyped_defs = true
 disallow_untyped_defs = true
-disallow_any_generics = true
-no_implicit_optional = true
+disallow_untyped_decorators = false
+warn_unused_ignores = true
+warn_unreachable = true
+strict = true
+mypy_path = ["src"]
 plugins = ["pydantic.mypy"]
 
 [tool.coverage.run]
@@ -107,6 +105,7 @@ module = [
   "httpx.*",
   "bs4.*",
   "joblib.*",
+  "fastapi.*",
 ]
 
 ignore_missing_imports = true

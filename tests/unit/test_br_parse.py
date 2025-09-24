@@ -52,4 +52,3 @@ def test_parse_games_basic():
 def test_parse_games_invalid_raises():
     with pytest.raises(ValueError):
         parse_games("<html><body>No tables here</body></html>")
-        

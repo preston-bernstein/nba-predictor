@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from functools import lru_cache
+from typing import Any, Literal, overload
 
 import joblib
 import pandas as pd
@@ -22,11 +23,11 @@ def load_games() -> pd.DataFrame:
 
 
 @lru_cache(maxsize=1)
-def load_model():
+def load_model() -> Any:
     return joblib.load(config.MODEL)
 
 
-def load_games_through(date: str | None):
+def load_games_through(date: str | None) -> pd.DataFrame:
     df = load_games()
     if date is None:
         return df
@@ -68,13 +69,23 @@ def _resolve_for_df(input_team: str, teams_in_data: set[str]) -> str:
     )
 
 
+@overload
+def matchup_features(
+    home: str, away: str, date: str | None = None, *, return_dict: Literal[True]
+) -> dict[str, float]: ...
+@overload
+def matchup_features(
+    home: str, away: str, date: str | None = None, *, return_dict: Literal[False] = ...
+) -> tuple[float, float]: ...
+
+
 def matchup_features(
     home: str,
     away: str,
     date: str | None = None,
     *,
     return_dict: bool = False,
-):
+) -> dict[str, float] | tuple[float, float]:
     df = load_games_through(date)
     teams = _teams_from_df(df)
 

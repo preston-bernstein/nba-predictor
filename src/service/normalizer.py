@@ -25,9 +25,36 @@ _TEAMS_MAP_VERSION = "2025-09-08"
 
 # Canonical Basketball-Reference 3-letter team codes (current franchises)
 CODES = {
-    "ATL", "BOS", "BRK", "CHO", "CHI", "CLE", "DAL", "DEN", "DET", "GSW", "HOU",
-    "IND", "LAC", "LAL", "MEM", "MIA", "MIL", "MIN", "NOP", "NYK", "OKC", "ORL",
-    "PHI", "PHO", "POR", "SAC", "SAS", "TOR", "UTA", "WAS",
+    "ATL",
+    "BOS",
+    "BRK",
+    "CHO",
+    "CHI",
+    "CLE",
+    "DAL",
+    "DEN",
+    "DET",
+    "GSW",
+    "HOU",
+    "IND",
+    "LAC",
+    "LAL",
+    "MEM",
+    "MIA",
+    "MIL",
+    "MIN",
+    "NOP",
+    "NYK",
+    "OKC",
+    "ORL",
+    "PHI",
+    "PHO",
+    "POR",
+    "SAC",
+    "SAS",
+    "TOR",
+    "UTA",
+    "WAS",
 }
 
 # Exact BR full names -> code (UPPERCASE, single-spaced)
@@ -74,7 +101,6 @@ ALIASES = {
     "NJN": "BRK",
     "NOH": "NOP",
     "NOK": "NOP",
-
     # City-only (unambiguous)
     "ATLANTA": "ATL",
     "BOSTON": "BOS",
@@ -104,7 +130,6 @@ ALIASES = {
     "TORONTO": "TOR",
     "UTAH": "UTA",
     "WASHINGTON": "WAS",
-
     # LA disambiguations
     "LA CLIPPERS": "LAC",
     "L A CLIPPERS": "LAC",
@@ -112,7 +137,6 @@ ALIASES = {
     "LA LAKERS": "LAL",
     "L A LAKERS": "LAL",
     "LOS ANGELES LAKERS": "LAL",
-
     # Nickname-only
     "HAWKS": "ATL",
     "CELTICS": "BOS",
@@ -145,7 +169,6 @@ ALIASES = {
     "RAPTORS": "TOR",
     "JAZZ": "UTA",
     "WIZARDS": "WAS",
-
     # Fan/press nicknames
     "MAVS": "DAL",
     "CAVS": "CLE",
@@ -172,6 +195,7 @@ ALIASES = {
 
 CODE_TO_FULL = {code: full for full, code in BR_FULL.items()}
 
+
 def canonical_name(code: str) -> str:
     """Return the Basketball-Reference display name for a canonical code."""
     if not isinstance(code, str) or not code.strip():
@@ -181,6 +205,7 @@ def canonical_name(code: str) -> str:
         raise TeamNormalizeError(f"Unknown team code '{code}'.")
     return CODE_TO_FULL.get(c, c)
 
+
 # Back-compat lowercase exports for older tests/code
 codes = CODES
 aliases = ALIASES
@@ -188,6 +213,7 @@ br_full = BR_FULL
 
 # Punctuation/whitespace cleanup (keep word chars and spaces only)
 _PUNC_RE = re.compile(r"[^A-Z0-9\s]+")
+
 
 def _clean(s: str) -> str:
     s = s.strip()
@@ -198,6 +224,7 @@ def _clean(s: str) -> str:
     s = _PUNC_RE.sub(" ", s)
     s = re.sub(r"\s+", " ", s).strip()
     return s
+
 
 def normalize_team(raw: str) -> str:
     """

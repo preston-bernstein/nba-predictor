@@ -7,7 +7,7 @@ from src import config
 from src.model.trainer import Trainer
 
 
-def main(models: list[str] | None = None):
+def main(models: list[str] | None = None) -> None:
     models = models or ["logreg"]  # keep default behavior
     trainer = Trainer(
         feats_path=Path(config.FEATS),

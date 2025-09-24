@@ -125,7 +125,7 @@ def _norm_team_label(raw: str) -> str:
                 return code
 
         hexes = " ".join(f"{ord(ch):04X}" for ch in s)
-        msg = f"Unknown team in scraped data: {raw!r} " f"(codepoints: {hexes})"
+        msg = f"Unknown team in scraped data: {raw!r} (codepoints: {hexes})"
         raise ValueError(msg) from e
 
 
@@ -203,11 +203,10 @@ def _cli() -> None:
 
     # args.seasons is Optional[List[int]]
     seasons: list[int] = (
-        list(args.seasons)
-        if args.seasons
-        else years_span(args.from_year, args.to_year)
+        list(args.seasons) if args.seasons else years_span(args.from_year, args.to_year)
     )
     main(seasons)
+
 
 if __name__ == "__main__":
     _cli()
