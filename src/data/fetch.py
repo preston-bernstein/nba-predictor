@@ -170,14 +170,14 @@ def fetch_seasons(seasons: list[int]) -> pd.DataFrame:
     return _post_parse_cleanup(games)
 
 
-def main(seasons: list[int]):
+def main(seasons: list[int]) -> None:
     games = fetch_seasons(seasons)
     out_csv = OUT_DIR / "games.csv"
     games.to_csv(out_csv, index=False)
     logging.info("saved %d games -> %s", len(games), out_csv)
 
 
-if __name__ == "__main__":
+def _cli() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument(
         "--from",
@@ -187,7 +187,11 @@ if __name__ == "__main__":
         help="Start season end-year (e.g., 2019 means 2018–19).",
     )
     ap.add_argument(
-        "--to", dest="to_year", type=int, default=2025, help="End season end-year (inclusive)."
+        "--to",
+        dest="to_year",
+        type=int,
+        default=2025,
+        help="End season end-year (inclusive).",
     )
     ap.add_argument(
         "--seasons",
@@ -197,5 +201,13 @@ if __name__ == "__main__":
     )
     args = ap.parse_args()
 
-    years = args.seasons if args.seasons else years_span(args.from_year, args.to_year)
-    main(years)
+    # args.seasons is Optional[List[int]]
+    seasons: list[int] = (
+        list(args.seasons)
+        if args.seasons
+        else years_span(args.from_year, args.to_year)
+    )
+    main(seasons)
+
+if __name__ == "__main__":
+    _cli()
