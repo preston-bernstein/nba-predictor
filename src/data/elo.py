@@ -3,6 +3,7 @@ from __future__ import annotations
 import math
 from dataclasses import dataclass
 
+import numpy as np
 import pandas as pd
 
 
@@ -51,6 +52,11 @@ def add_elo(games: pd.DataFrame, cfg: EloConfig | None = None) -> pd.DataFrame:
             as_ = float(row["away_score"])
         except Exception as e:
             raise ValueError(f"Non-numeric score at {row.get('GAME_DATE')}: {e}") from e
+        
+        if np.isnan(hs) or np.isnan(as_):
+            raise ValueError(
+                f"Non-numeric score at {row.get('GAME_DATE')}: NaN"
+            )
 
         rh = ratings.get(h, cfg.base)
         ra = ratings.get(a, cfg.base)

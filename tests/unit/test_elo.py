@@ -1,4 +1,5 @@
 import pandas as pd
+import pytest
 
 from src.data.elo import EloConfig, add_elo
 
@@ -15,3 +16,16 @@ def test_add_elo_outputs_and_home_adv_effect():
     assert {"home_elo_pre", "away_elo_pre"}.issubset(out.columns)
     # First game: both teams start equal pregame
     assert out.loc[0, "home_elo_pre"] == out.loc[0, "away_elo_pre"]
+
+def test_add_elo_non_numeric_raises():
+    df = pd.DataFrame([{"GAME_DATE":"2024-01-01","home_team":"NYK","away_team":"BOS",
+                        "home_score":"NaN","away_score":100}])
+    with pytest.raises(ValueError):
+        add_elo(df)
+
+def test_add_elo_tie_path_ok():
+    df = pd.DataFrame([
+        {"GAME_DATE":"2024-01-01","home_team":"NYK","away_team":"BOS","home_score":100,"away_score":100}
+    ])
+    out = add_elo(df, EloConfig(k=10.0))
+    assert {"home_elo_pre","away_elo_pre"} <= set(out.columns)

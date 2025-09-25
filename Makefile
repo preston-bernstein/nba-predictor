@@ -8,7 +8,10 @@ MODELS ?= logreg
 PYTEST_FLAGS ?= -q
 COMPARE_BRANCH ?= origin/main
 COV_MIN ?= 85
-OFFLINE ?= 0   # set to 1 in CI to avoid network/scraping
+OFFLINE ?= 0
+ifeq ($(CI),true)
+  OFFLINE := 1
+endif
 
 DATA   := data_cache/games.csv
 FEATS  := data_cache/features.csv
@@ -109,7 +112,7 @@ $(MODEL): $(FEATS)
 	@echo "OFFLINE=1: seeding model from fixtures -> $(MODEL)"
 	mkdir -p artifacts
 	@if [ -f "$(FIX_MODEL)" ]; then cp "$(FIX_MODEL)" "$(MODEL)"; \
-	else echo "ERROR: Fixture $(FIX_MODEL) not found. Provide a small pre-trained model."; exit 1; fi
+	else echo "ERROR: Fixture $(FIX_MODEL)" not found. Provide a small pre-trained model.; exit 1; fi
 
 else  # ----------- ONLINE (default local) -----------
 
