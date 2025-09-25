@@ -1,10 +1,13 @@
 from __future__ import annotations
 
+import logging
 import math
 from dataclasses import dataclass
 
 import numpy as np
 import pandas as pd
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True)
@@ -51,12 +54,11 @@ def add_elo(games: pd.DataFrame, cfg: EloConfig | None = None) -> pd.DataFrame:
             hs = float(row["home_score"])
             as_ = float(row["away_score"])
         except Exception as e:
+            logger.debug("Elo parse failed at %s: %r", row.get("GAME_DATE"), e)
             raise ValueError(f"Non-numeric score at {row.get('GAME_DATE')}: {e}") from e
-        
+
         if np.isnan(hs) or np.isnan(as_):
-            raise ValueError(
-                f"Non-numeric score at {row.get('GAME_DATE')}: NaN"
-            )
+            raise ValueError(f"Non-numeric score at {row.get('GAME_DATE')}: NaN")
 
         rh = ratings.get(h, cfg.base)
         ra = ratings.get(a, cfg.base)

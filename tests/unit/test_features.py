@@ -1,6 +1,7 @@
 import pandas as pd
 
 from src.data import features as features_mod
+from src.data.features import _main as features_main
 
 
 def test_build_features_writes_file_and_columns(tmp_path, monkeypatch):
@@ -47,3 +48,16 @@ def test_build_features_writes_file_and_columns(tmp_path, monkeypatch):
         "home_win",
     }
     assert expected_cols.issubset(df.columns)
+
+
+def test__main_invokes_build_features(monkeypatch):
+    called = {"ok": False}
+
+    def fake_build_features():
+        called["ok"] = True
+
+    # Patch the name where it's looked up: inside src.data.features
+    monkeypatch.setattr("src.data.features.build_features", fake_build_features, raising=True)
+
+    features_main()
+    assert called["ok"] is True

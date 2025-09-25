@@ -4,6 +4,7 @@ import pandas as pd
 from pytest import raises
 
 from src.service import core as core_mod
+from src.service.core import compute_matchup_deltas
 
 
 def make_games():
@@ -54,3 +55,34 @@ def test_compute_matchup_deltas_insufficient_history():
     with raises(ValueError) as e:
         core_mod.compute_matchup_deltas(short, "NYK", "BOS")
     assert "insufficient" in str(e.value).lower()
+
+
+def _make_games_with_spacing():
+    rows = []
+    dates = pd.to_datetime([
+        "2024-10-01",
+        "2024-10-03",
+        "2024-10-05",
+        "2024-10-08",
+        "2024-10-10",
+        "2024-10-12",
+        "2024-10-15",
+        "2024-10-18",
+    ])
+    for i, d in enumerate(dates):
+        home, away = ("NYK", "BOS") if i % 2 == 0 else ("BOS", "NYK")
+        rows.append({
+            "GAME_DATE": d,
+            "home_team": home,
+            "home_score": 100 + i,
+            "away_team": away,
+            "away_score": 90 + i,
+        })
+    return pd.DataFrame(rows)
+
+
+def test_compute_matchup_deltas_includes_optional_fields():
+    games = _make_games_with_spacing()
+    deltas = compute_matchup_deltas(games, "NYK", "BOS")
+    assert {"delta_off", "delta_def"} <= set(deltas)
+    assert "delta_rest" in deltas and "delta_elo" in deltas
