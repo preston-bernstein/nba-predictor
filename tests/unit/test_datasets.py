@@ -3,6 +3,7 @@ import pandas as pd
 import pytest
 
 from src.model import datasets as ds
+from src.model.datasets import load_features, time_split
 
 
 def _mini_df():
@@ -63,3 +64,24 @@ def test_load_features_roundtrip(tmp_path):
     loaded = ds.load_features(p)
     assert len(loaded) == len(df)
     assert pd.api.types.is_datetime64_any_dtype(loaded["GAME_DATE"])
+
+def test_load_features_missing_required_cols(tmp_path):
+    p = tmp_path / "features.csv"
+    df = pd.DataFrame({
+        "GAME_DATE": pd.date_range("2024-01-01", periods=3, freq="D"),
+        "delta_off": [1, 2, 3],
+    })
+    df.to_csv(p, index=False)
+    with pytest.raises(ValueError, match=r"^features file missing required columns:"):
+        load_features(p)
+
+def test_time_split_adjust_when_test_frac_ge_n():
+    df = pd.DataFrame({
+        "GAME_DATE": pd.date_range("2024-01-01", periods=2, freq="D"),
+        "home_win": [0, 1],
+        "delta_off": [1, 2],
+        "delta_def": [3, 4],
+    })
+    train, test = time_split(df, test_frac=1.0)
+    assert len(train) == 1 and len(test) == 1
+    assert train["GAME_DATE"].max() < test["GAME_DATE"].min()
