@@ -36,3 +36,8 @@ def test_write_metrics(tmp_path: Path):
     path = write_metrics(art, {"x": 1})
     assert path.exists()
     assert json.loads(path.read_text())["x"] == 1
+
+
+def test_persist_best_model_missing(tmp_path):
+    with pytest.raises(FileNotFoundError, match="missing trained model file:"):
+        persist_best_model(tmp_path, "rf")
