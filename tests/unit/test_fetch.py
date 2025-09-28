@@ -65,13 +65,17 @@ def test_post_parse_cleanup_sorts_and_normalizes():
     assert set(out["home_team"]) >= {"NYK"}
     assert set(out["away_team"]) >= {"BOS", "POR"}
 
+
 def test_norm_team_label_suffix_branch_with_prefix_text():
     assert _norm_team_label("The Knicks") == "NYK"
+
 
 def test_years_span_happy_path_inclusive():
     assert years_span(2022, 2025) == [2022, 2023, 2024, 2025]
 
+
 def test_years_span_raises_when_end_lt_start():
     import pytest
+
     with pytest.raises(SystemExit):
         years_span(2025, 2024)

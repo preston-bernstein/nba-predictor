@@ -12,8 +12,9 @@ concurrency:
 
 env:
   PYTHONUNBUFFERED: "1"
-  COV_MIN: "95"          # overall coverage gate
-  DIFF_COV_MIN: "90"     # changed-lines coverage gate on PRs
+  PYTHON_VERSION: "3.12"  # match pyproject requires-python
+  COV_MIN: "95"
+  DIFF_COV_MIN: "90"
 
 jobs:
   test:
@@ -23,22 +24,29 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0   # required for diff-cover compare
+          fetch-depth: 0
 
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.13"
+          python-version: ${{ env.PYTHON_VERSION }}
           cache: "pip"
 
       - name: Install project (dev)
         run: |
           python -m pip install -U pip
-          python -m pip install -e '.[dev]'
+          # If constraints.txt exists, use it to avoid resolver drift
+          if [ -f constraints.txt ]; then
+            pip install -e '.[dev]' --upgrade-strategy eager -c constraints.txt
+          else
+            pip install -e '.[dev]' --upgrade-strategy eager
+          fi
           python -m pip install diff-cover pytest-html pytest-xdist
 
-      - name: Run tests with coverage gate
-        run: COV_MIN=${{ env.COV_MIN }} make test-cov-gate
+      - name: Run tests with coverage gate (offline fixtures)
+        run: |
+          mkdir -p report
+          OFFLINE=1 COV_MIN=${{ env.COV_MIN }} make test-cov-gate
 
       - name: Diff coverage gate (PRs only)
         if: github.event_name == 'pull_request'

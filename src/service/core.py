@@ -21,10 +21,14 @@ def _last_elo(df: pd.DataFrame, team: str) -> float | None:
     g = add_elo(df[["GAME_DATE", "home_team", "home_score", "away_team", "away_score"]])
     h = g[g["home_team"] == team][["home_elo_pre"]].tail(1)
     a = g[g["away_team"] == team][["away_elo_pre"]].tail(1)
-    if not h.empty:
-        return float(h["home_elo_pre"].iloc[0])
-    if not a.empty:
-        return float(a["away_elo_pre"].iloc[0])
+
+    last_home = float(h["home_elo_pre"].iloc[-1]) if not h.empty else None
+    last_away = float(a["away_elo_pre"].iloc[-1]) if not a.empty else None
+
+    if last_home is not None:
+        return last_home
+    if last_away is not None:
+        return last_away
     return None
 
 
