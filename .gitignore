@@ -62,3 +62,16 @@ artifacts/
 *.log
 *.out
 *.err
+
+# Any virtualenv named like .venv, .venv312, .venv-py3.12, etc.
+.venv*/
+.venv*/**
+
+# Common virtualenv names some tools create
+.python-env/
+.conda/
+pip-wheel-metadata/
+
+# Local tooling noise
+.pyright/
+.mcache/

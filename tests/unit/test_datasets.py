@@ -65,6 +65,7 @@ def test_load_features_roundtrip(tmp_path):
     assert len(loaded) == len(df)
     assert pd.api.types.is_datetime64_any_dtype(loaded["GAME_DATE"])
 
+
 def test_load_features_missing_required_cols(tmp_path):
     p = tmp_path / "features.csv"
     df = pd.DataFrame({
@@ -74,6 +75,7 @@ def test_load_features_missing_required_cols(tmp_path):
     df.to_csv(p, index=False)
     with pytest.raises(ValueError, match=r"^features file missing required columns:"):
         load_features(p)
+
 
 def test_time_split_adjust_when_test_frac_ge_n():
     df = pd.DataFrame({

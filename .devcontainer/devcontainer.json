@@ -1,0 +1,14 @@
+{
+  "name": "nba-predictor",
+  "build": { "dockerfile": "../Dockerfile.dev", "context": ".." },
+  "workspaceFolder": "/workspaces/nba-predictor",
+  "containerEnv": { "PYTHONPATH": "/workspaces/nba-predictor" },
+  "features": { "ghcr.io/devcontainers/features/common-utils:2": {} },
+  "customizations": {
+    "vscode": {
+      "settings": { "python.defaultInterpreterPath": "/usr/local/bin/python" },
+      "extensions": ["ms-python.python", "ms-python.vscode-pylance"]
+    }
+  },
+  "postCreateCommand": "bash -lc 'bash scripts/bootstrap.sh'"
+}

@@ -22,7 +22,7 @@ def main(models: list[str] | None = None) -> None:
     print("Metrics ->", metrics)
 
 
-if __name__ == "__main__": # pragma: no cover
+if __name__ == "__main__":  # pragma: no cover
     ap = argparse.ArgumentParser()
     ap.add_argument(
         "--models",

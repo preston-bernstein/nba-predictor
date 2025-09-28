@@ -20,5 +20,5 @@ def _main() -> None:
     build_features()
 
 
-if __name__ == "__main__": # pragma: no cover
+if __name__ == "__main__":  # pragma: no cover
     _main()

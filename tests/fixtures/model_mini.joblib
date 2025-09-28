@@ -1,0 +1,9 @@
+import pandas as pd
+from sklearn.linear_model import LogisticRegression
+import joblib
+
+df = pd.read_csv("tests/fixtures/features_mini.csv", parse_dates=["GAME_DATE"])
+X = df[["delta_off", "delta_def"]]
+y = df["home_win"]
+model = LogisticRegression().fit(X, y)
+joblib.dump(model, "tests/fixtures/model_mini.joblib")

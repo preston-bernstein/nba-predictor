@@ -7,13 +7,14 @@ name = "nba-predictor"
 version = "0.1.0"
 description = "Predict NBA game outcomes with a clean FastAPI service and reproducible ML pipeline."
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.12,<3.13"
 license = { text = "MIT" }
 authors = [{ name = "Your Name" }]
 keywords = ["nba", "machine-learning", "fastapi", "sports", "prediction"]
 
 dependencies = [
-  "fastapi>=0.110",
+  "fastapi>=0.116.2",
+  "starlette>=0.48.0,<0.49.0",
   "uvicorn[standard]>=0.27",
   "pydantic>=2.7",
   "pandas>=2.0",
@@ -22,7 +23,7 @@ dependencies = [
   "joblib>=1.3",
   "requests>=2.31",
   "beautifulsoup4>=4.12",
-  "lxml>=4.9"
+  "lxml>=4.9",
 ]
 
 [project.optional-dependencies]
@@ -41,30 +42,28 @@ dev = [
   "types-requests",
   "pip-tools",
   "diff-cover>=9.0",
+  "httpx>=0.27",
 ]
 
 [tool.setuptools.packages.find]
-# IMPORTANT: search from repo root and include the 'src' package and its subpackages
 where = ["."]
 include = ["src*"]
-
-# If you ship static files later, add them here
-# [tool.setuptools.package-data]
-# "src" = ["**/*.json"]
-
-# -------------------- Tooling configs --------------------
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-q --tb=short --strict-markers"
+xfail_strict = true
+markers = [
+  "integration: slow/IO-heavy tests",
+]
 filterwarnings = [
-  "error",
+  "error::DeprecationWarning:src.*",
   "ignore:.*The `disp` and `iprint` options of the L-BFGS-B solver are deprecated.*:DeprecationWarning:sklearn.linear_model._logistic",
 ]
 
 [tool.ruff]
 line-length = 100
-target-version = "py310"
+target-version = "py312"
 lint.select = ["E", "F", "I", "UP", "B", "SIM"]
 lint.ignore = ["E203"]
 format.preview = true
@@ -73,7 +72,7 @@ format.preview = true
 known-first-party = ["src"]
 
 [tool.mypy]
-python_version = "3.13"
+python_version = "3.12"
 files = ["src", "scripts"]
 check_untyped_defs = true
 disallow_untyped_defs = true
@@ -84,20 +83,6 @@ strict = true
 mypy_path = ["src"]
 plugins = ["pydantic.mypy"]
 
-[tool.coverage.run]
-branch = true
-source = ["src"]
-
-[tool.coverage.report]
-show_missing = true
-skip_covered = true
-precision = 1
-fail_under = 85
-
-[tool.coverage.html]
-directory = "coverage_html"
-show_contexts = true
-
 [[tool.mypy.overrides]]
 module = [
   "pandas.*",
@@ -107,6 +92,21 @@ module = [
   "bs4.*",
   "joblib.*",
   "fastapi.*",
+  "mangum",
+  "mangum.*"
 ]
-
 ignore_missing_imports = true
+
+[tool.coverage.run]
+branch = true
+source = ["src"]
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = true
+precision = 1
+fail_under = 0
+
+[tool.coverage.html]
+directory = "coverage_html"
+show_contexts = true

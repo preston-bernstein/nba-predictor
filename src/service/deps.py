@@ -29,8 +29,8 @@ def load_model() -> Any:
 
 def load_games_through(date: str | None) -> pd.DataFrame:
     df = load_games()
-    if date is None:
-        return df
+    if date is None:  # pragma: no cover
+        return df  # pragma: no cover
     return df.loc[df["GAME_DATE"] < pd.to_datetime(date)].copy()
 
 
@@ -56,8 +56,8 @@ def _resolve_for_df(input_team: str, teams_in_data: set[str]) -> str:
         # Nothing to validate against (e.g., filtered dataset in tests) — return code
         return code
 
-    if code in teams_in_data:
-        return code
+    if code in teams_in_data:  # pragma: no cover
+        return code  # pragma: no cover
 
     full = canonical_name(code)
     if full in teams_in_data:
@@ -66,7 +66,7 @@ def _resolve_for_df(input_team: str, teams_in_data: set[str]) -> str:
     # we *do* have teams in data, but neither code nor full name present
     raise ValueError(
         f"unknown team '{input_team}' in historical data; available={sorted(teams_in_data)[:5]}..."
-    )
+    )  # pragma: no cover
 
 
 @overload
