@@ -4,6 +4,8 @@ from fastapi.testclient import TestClient
 from src.service import routes as routes_mod
 from src.service.app import app
 
+API_PREFIX = "/v1"
+
 
 class DummyModel:
     # emulate scikit API; expect 2 features (off, def)
@@ -30,7 +32,7 @@ def test_teams(monkeypatch):
     monkeypatch.setattr(routes_mod, "load_games", lambda: df, raising=True)
 
     client = TestClient(app)
-    r = client.get("/teams")
+    r = client.get(f"{API_PREFIX}/teams")
     assert r.status_code == 200
     assert set(r.json()["teams"]) == {"NYK", "BOS"}
 
@@ -52,7 +54,9 @@ def test_predict_ok(monkeypatch):
     monkeypatch.setattr(routes_mod, "load_model", lambda: DummyModel(), raising=True)
 
     client = TestClient(app)
-    r = client.get("/predict", params={"home": "NYK", "away": "BOS", "date": "2024-11-01"})
+    r = client.get(
+        f"{API_PREFIX}/predict", params={"home": "NYK", "away": "BOS", "date": "2024-11-01"}
+    )
     assert r.status_code == 200
     body = r.json()
     assert body["home_team"] == "NYK" and body["away_team"] == "BOS"
@@ -73,6 +77,6 @@ def test_predict_bad_input(monkeypatch):
     monkeypatch.setattr(routes_mod, "matchup_features", boom, raising=True)
 
     client = TestClient(app)
-    r = client.get("/predict", params={"home": "NYK", "away": "???"})
+    r = client.get(f"{API_PREFIX}/predict", params={"home": "NYK", "away": "???"})
     assert r.status_code == 422
     assert "unknown" in r.json()["detail"]

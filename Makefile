@@ -9,6 +9,7 @@ PYTEST_FLAGS ?= -q
 COMPARE_BRANCH ?= origin/main
 COV_MIN ?= 85
 OFFLINE ?= 0
+PRESERVE ?= 0
 ifeq ($(CI),true)
   OFFLINE := 1
 endif
@@ -34,7 +35,8 @@ COV_FLAGS = --cov=src --cov-branch --cov-context=test --cov-fail-under=$(COV_MIN
         serve clean rebuild all \
         dev dev-requirements lint type fmt \
         hooks check ci precommit \
-        fetch-online fetch-offline features-offline train-offline
+        fetch-online fetch-offline features-offline train-offline \
+		pc
 
 default: test
 
@@ -97,22 +99,31 @@ fetch-offline: $(DATA)
 $(DATA):
 	@echo "OFFLINE=1: seeding games from fixtures -> $(DATA)"
 	mkdir -p data_cache
-	@if [ -f "$(FIX_GAMES)" ]; then cp "$(FIX_GAMES)" "$(DATA)"; \
-	else echo "ERROR: Fixture $(FIX_GAMES) not found. Provide a small sample games CSV."; exit 1; fi
+ifeq ($(PRESERVE),1)
+	@[ -f "$(DATA)" ] || { [ -f "$(FIX_GAMES)" ] && cp "$(FIX_GAMES)" "$(DATA)" || { echo "ERROR: Fixture $(FIX_GAMES) not found."; exit 1; }; }
+else
+	@[ -f "$(FIX_GAMES)" ] && cp "$(FIX_GAMES)" "$(DATA)" || { echo "ERROR: Fixture $(FIX_GAMES) not found."; exit 1; }
+endif
 
 features-offline: $(FEATS)
 $(FEATS): $(DATA)
 	@echo "OFFLINE=1: seeding features from fixtures -> $(FEATS)"
 	mkdir -p data_cache
-	@if [ -f "$(FIX_FEATS)" ]; then cp "$(FIX_FEATS)" "$(FEATS)"; \
-	else echo "ERROR: Fixture $(FIX_FEATS) not found. Provide a small sample features CSV."; exit 1; fi
+ifeq ($(PRESERVE),1)
+	@[ -f "$(FEATS)" ] || { [ -f "$(FIX_FEATS)" ] && cp "$(FIX_FEATS)" "$(FEATS)" || { echo "ERROR: Fixture $(FIX_FEATS) not found."; exit 1; }; }
+else
+	@[ -f "$(FIX_FEATS)" ] && cp "$(FIX_FEATS)" "$(FEATS)" || { echo "ERROR: Fixture $(FIX_FEATS) not found."; exit 1; }
+endif
 
 train-offline: $(MODEL)
 $(MODEL): $(FEATS)
 	@echo "OFFLINE=1: seeding model from fixtures -> $(MODEL)"
 	mkdir -p artifacts
-	@if [ -f "$(FIX_MODEL)" ]; then cp "$(FIX_MODEL)" "$(MODEL)"; \
-	else echo "ERROR: Fixture $(FIX_MODEL)" not found. Provide a small pre-trained model.; exit 1; fi
+ifeq ($(PRESERVE),1)
+	@[ -f "$(MODEL)" ] || { [ -f "$(FIX_MODEL)" ] && cp "$(FIX_MODEL)" "$(MODEL)" || { echo "ERROR: Fixture $(FIX_MODEL) not found."; exit 1; }; }
+else
+	@[ -f "$(FIX_MODEL)" ] && cp "$(FIX_MODEL)" "$(MODEL)" || { echo "ERROR: Fixture $(FIX_MODEL) not found."; exit 1; }
+endif
 
 else  # ----------- ONLINE (default local) -----------
 
@@ -212,3 +223,7 @@ fmt:
 clean:
 	rm -rf artifacts data_cache
 	mkdir -p artifacts data_cache
+
+# Run all pre-commit hooks over the repo
+pc:
+	@if command -v pre-commit >/dev/null 2>&1; then pre-commit run --all-files; else echo "pre-commit not installed"; exit 1; fi

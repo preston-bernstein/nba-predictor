@@ -1,0 +1,12 @@
+-r requirements.in
+pytest
+pytest-cov
+pytest-xdist
+pytest-randomly
+hypothesis
+mypy
+ruff
+types-requests
+types-beautifulsoup4
+httpx
+requests
