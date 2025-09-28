@@ -38,7 +38,7 @@ jobs:
           python -m pip install diff-cover pytest-html pytest-xdist
 
       - name: Run tests with coverage gate
-        run: COV_MIN=${{ env.COV_MIN }} make test-cov-gate
+        run: OFFLINE=1 COV_MIN=${{ env.COV_MIN }} make test-cov-gate
 
       - name: Diff coverage gate (PRs only)
         if: github.event_name == 'pull_request'
