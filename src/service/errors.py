@@ -7,7 +7,7 @@ __all__ = ["unprocessable", "bad_request", "not_found"]
 
 def unprocessable(detail: str) -> HTTPException:
     """422 Unprocessable Entity (validation/domain/history errors)."""
-    return HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=detail)
+    return HTTPException(status_code=422, detail=detail)
 
 
 def bad_request(detail: str) -> HTTPException:
