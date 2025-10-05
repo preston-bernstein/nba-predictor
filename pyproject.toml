@@ -7,7 +7,7 @@ name = "nba-predictor"
 version = "0.1.0"
 description = "Predict NBA game outcomes with a clean FastAPI service and reproducible ML pipeline."
 readme = "README.md"
-requires-python = ">=3.13"
+requires-python = ">=3.12,<3.13"
 license = { text = "MIT" }
 authors = [{ name = "Your Name" }]
 keywords = ["nba", "machine-learning", "fastapi", "sports", "prediction"]
@@ -63,7 +63,7 @@ filterwarnings = [
 
 [tool.ruff]
 line-length = 100
-target-version = "py313"
+target-version = "py312"
 lint.select = ["E", "F", "I", "UP", "B", "SIM"]
 lint.ignore = ["E203"]
 format.preview = true
@@ -72,7 +72,7 @@ format.preview = true
 known-first-party = ["src"]
 
 [tool.mypy]
-python_version = "3.13"
+python_version = "3.12"
 files = ["src", "scripts"]
 check_untyped_defs = true
 disallow_untyped_defs = true
