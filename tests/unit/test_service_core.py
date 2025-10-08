@@ -89,6 +89,7 @@ def test_compute_matchup_deltas_includes_optional_fields():
     assert {"delta_off", "delta_def"} <= set(deltas)
     assert "delta_rest" in deltas and "delta_elo" in deltas
 
+
 @pytest.mark.parametrize("force_none", [True, False])
 def test_compute_matchup_deltas_optional_fields_presence(force_none, monkeypatch):
     games = _make_games_with_spacing()
@@ -98,7 +99,7 @@ def test_compute_matchup_deltas_optional_fields_presence(force_none, monkeypatch
         monkeypatch.setattr(core_mod, "_last_elo", lambda *_: None, raising=True)
 
     deltas = compute_matchup_deltas(games, "NYK", "BOS")
-    assert { "delta_off", "delta_def" } <= set(deltas)
+    assert {"delta_off", "delta_def"} <= set(deltas)
     if force_none:
         assert "delta_rest" not in deltas
         assert "delta_elo" not in deltas
@@ -106,13 +107,20 @@ def test_compute_matchup_deltas_optional_fields_presence(force_none, monkeypatch
         assert "delta_rest" in deltas
         assert "delta_elo" in deltas
 
+
 def test__last_rest_days_single_game_returns_none():
-    df = pd.DataFrame(
-        [dict(GAME_DATE=pd.Timestamp("2024-10-01"), home_team="NYK", home_score=100,
-              away_team="BOS", away_score=99)]
-    )
+    df = pd.DataFrame([
+        dict(
+            GAME_DATE=pd.Timestamp("2024-10-01"),
+            home_team="NYK",
+            home_score=100,
+            away_team="BOS",
+            away_score=99,
+        )
+    ])
     assert core_mod._last_rest_days(df, "NYK") is None
     assert core_mod._last_rest_days(df, "BOS") is None
+
 
 def test__team_form_nan_returns_none():
     rows = [
@@ -121,15 +129,18 @@ def test__team_form_nan_returns_none():
         ("2024-10-03", "MIA", 90, "NYK", 92),
         ("2024-10-05", "NYK", 105, "ATL", 101),
     ]
-    df = pd.DataFrame(rows, columns=["GAME_DATE","home_team","home_score","away_team","away_score"])
+    df = pd.DataFrame(
+        rows, columns=["GAME_DATE", "home_team", "home_score", "away_team", "away_score"]
+    )
     df["GAME_DATE"] = pd.to_datetime(df["GAME_DATE"])
     assert core_mod._team_form(df, "NYK") is None
+
 
 def test__last_elo_away_branch_returns_value():
     df = pd.DataFrame(
         [
             ("2024-10-01", "BOS", 100, "NYK", 99),
-            ("2024-10-03", "PHI", 95,  "NYK", 90),
+            ("2024-10-03", "PHI", 95, "NYK", 90),
         ],
         columns=["GAME_DATE", "home_team", "home_score", "away_team", "away_score"],
     )
@@ -138,11 +149,12 @@ def test__last_elo_away_branch_returns_value():
     val = core_mod._last_elo(df, "NYK")
     assert isinstance(val, float)
 
+
 def test__last_elo_returns_none_when_team_absent():
     df = pd.DataFrame(
         [
             ("2024-10-01", "NYK", 100, "BOS", 98),
-            ("2024-10-03", "BOS", 99,  "NYK", 101),
+            ("2024-10-03", "BOS", 99, "NYK", 101),
         ],
         columns=["GAME_DATE", "home_team", "home_score", "away_team", "away_score"],
     )

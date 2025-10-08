@@ -17,10 +17,11 @@ def setup() -> None:
     level = os.getenv("LOG LEVEL", "INFO").upper()
     prod = os.getenv("APP_ENV") == "prod"
 
-    #Base Config
+    # Base Config
     logging.basicConfig(level=level, stream=sys.stdout)
 
     if prod:
+
         class JsonHandler(logging.StreamHandler[TextIO]):
             def emit(self, record: logging.LogRecord) -> None:
                 msg: dict[str, Any] = {
@@ -31,6 +32,7 @@ def setup() -> None:
                 if record.exc_info:
                     msg["exc_info"] = logging.Formatter().formatException(record.exc_info)
                 sys.stdout.write(json.dumps(msg) + "\n")
+
         root = logging.getLogger()
         handler: logging.Handler = JsonHandler()
         root.handlers = [handler]

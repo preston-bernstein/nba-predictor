@@ -177,7 +177,7 @@ def main(seasons: list[int]) -> None:
     logging.info("saved %d games -> %s", len(games), out_csv)
 
 
-def _cli() -> None: # pragma: no cover
+def _cli() -> None:  # pragma: no cover
     ap = argparse.ArgumentParser()
     ap.add_argument(
         "--from",
@@ -208,5 +208,5 @@ def _cli() -> None: # pragma: no cover
     main(seasons)
 
 
-if __name__ == "__main__": # pragma: no cover
+if __name__ == "__main__":  # pragma: no cover
     _cli()

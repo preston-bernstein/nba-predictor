@@ -1,0 +1,9 @@
+fastapi
+mangum
+pandas
+scikit-learn
+joblib
+lxml
+beautifulsoup4
+html5lib
+uvicorn

@@ -92,6 +92,8 @@ module = [
   "bs4.*",
   "joblib.*",
   "fastapi.*",
+  "mangum",
+  "mangum.*"
 ]
 ignore_missing_imports = true
 
