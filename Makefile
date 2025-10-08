@@ -35,7 +35,8 @@ COV_FLAGS = --cov=src --cov-branch --cov-context=test --cov-fail-under=$(COV_MIN
         serve clean rebuild all \
         dev dev-requirements lint type fmt \
         hooks check ci precommit \
-        fetch-online fetch-offline features-offline train-offline
+        fetch-online fetch-offline features-offline train-offline \
+		pc
 
 default: test
 
@@ -222,3 +223,7 @@ fmt:
 clean:
 	rm -rf artifacts data_cache
 	mkdir -p artifacts data_cache
+
+# Run all pre-commit hooks over the repo
+pc:
+	@if command -v pre-commit >/dev/null 2>&1; then pre-commit run --all-files; else echo "pre-commit not installed"; exit 1; fi

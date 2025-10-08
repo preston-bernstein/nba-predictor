@@ -28,3 +28,6 @@ pre-commit run --all-files || true
  --global --unset core.hooksPath || true
 pre-commit install --install-hooks
 pre-commit run --all-files || true
+
+git config alias.cfix '!f(){ pre-commit run --all-files && git add -A && git commit -m "$*"; }; f'
+git config alias.pc '!pre-commit run --all-files'
