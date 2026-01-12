@@ -6,4 +6,4 @@ joblib
 lxml
 beautifulsoup4
 html5lib
-uvicorn
+uvicorn[standard]
