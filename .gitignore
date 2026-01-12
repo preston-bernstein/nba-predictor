@@ -75,3 +75,6 @@ pip-wheel-metadata/
 # Local tooling noise
 .pyright/
 .mcache/
+
+AGENTS.md
+docs-internal/
