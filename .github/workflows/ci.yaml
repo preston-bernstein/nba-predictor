@@ -21,7 +21,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
+      - name: Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
@@ -32,7 +32,7 @@ jobs:
           python-version: ${{ env.PYTHON_VERSION }}
           cache: "pip"
 
-      - name: Install project (dev)
+      - name: Install dependencies
         run: |
           python -m pip install -U pip
           # If constraints.txt exists, use it to avoid resolver drift
@@ -41,9 +41,15 @@ jobs:
           else
             pip install -e '.[dev]' --upgrade-strategy eager
           fi
-          python -m pip install diff-cover pytest-html pytest-xdist
+          python -m pip install diff-cover pytest-html pytest-xdist build
 
-      - name: Run tests with coverage gate (offline fixtures)
+      - name: Lint
+        run: make lint
+
+      - name: Build package
+        run: python -m build
+
+      - name: Test with coverage gate (offline fixtures)
         run: |
           mkdir -p report
           OFFLINE=1 COV_MIN=${{ env.COV_MIN }} make test-cov-gate
@@ -54,19 +60,14 @@ jobs:
           git fetch origin "${{ github.base_ref }}"
           diff-cover coverage.xml --compare-branch="origin/${{ github.base_ref }}" --fail-under=${DIFF_COV_MIN}
 
-      - name: Upload coverage HTML
+      - name: Upload coverage to Codecov
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: codecov/codecov-action@v4
         with:
-          name: coverage-html
-          path: coverage_html
-
-      - name: Upload JUnit/HTML test report
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: test-report
-          path: report
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: coverage.xml
+          flags: python
+          fail_ci_if_error: true
 
       - name: Upload coverage XML
         if: always()
@@ -74,3 +75,17 @@ jobs:
         with:
           name: coverage-xml
           path: coverage.xml
+
+      - name: Upload coverage HTML
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-html
+          path: coverage_html
+
+      - name: Upload test report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-report
+          path: report

@@ -1,194 +1,81 @@
-# 🏀 NBA Predictor
+# NBA predictor
 
-End-to-end, reproducible pipeline to predict NBA game outcomes:
-**fetch → features → train → serve → test**. The code is clean, modular, and fully covered by tests.
+[![CI](https://github.com/preston-bernstein/nba-predictor/actions/workflows/ci.yaml/badge.svg?branch=main)](https://github.com/preston-bernstein/nba-predictor/actions/workflows/ci.yaml) [![Coverage](https://codecov.io/gh/preston-bernstein/nba-predictor/branch/main/graph/badge.svg)](https://codecov.io/gh/preston-bernstein/nba-predictor) [![Python](https://img.shields.io/badge/python-3.12-blue)](pyproject.toml) [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
----
+Python 3.12 pipeline that scrapes Basketball-Reference, builds features, trains a classifier, and serves win probabilities through FastAPI. Cached CSVs in `data_cache/` and artifacts in `artifacts/` drive all predictions; refresh them with the pipeline before serving.
 
-## Quickstart
+## Setup
+
+Create a virtual environment and install dev dependencies:
 
 ```bash
-# 1) Create env
-python -m venv .venv && source .venv/bin/activate
+python -m venv .venv
+source .venv/bin/activate
 python -m pip install -U pip
-
-# 2) Dev install (editable, with tooling)
 python -m pip install -e '.[dev]'
-
-# 3) Run the pipeline
-make pipeline    # fetch -> features -> train
-
-# 4) Run tests (will train first if needed)
-make test        # quiet
-make test-verbose
-make test-parallel
-
-# 5) Coverage
-make test-cov          # terminal + HTML + XML (fails if < COV_MIN)
-make cov-open          # open HTML at coverage_html/index.html
-make test-cov-gaps     # list uncovered files/lines/branches
-make test-cov-diff     # changed-lines gate vs origin/main
 ```
-> Tip: `make help` lists all commands.
-
----
-
-## Project Layout
-
-```
-nba-predictor/
-  src/
-    config.py                 # central paths (DATA, FEATS, MODEL)
-    data/
-      fetch.py                # BR scrape orchestration
-      br_client.py            # HTTP client (retriable)
-      br_parse.py             # HTML -> tidy CSV rows
-      elo.py                  # Elo features
-      features.py             # CLI wrapper to build features.csv
-      transform.py            # pure feature builders (rolling, rest, joins)
-    model/
-      datasets.py             # dataset splits, pick_features, to_xy
-      metrics.py              # fit & score, safe AUC/ACC
-      models.py               # REGISTRY + get_models()
-      select.py               # pick_best(), write_metrics(), persist_best_model()
-      trainer.py              # multi-model orchestrator
-      train.py                # CLI: orchestrates datasets/metrics/models/select
-    service/
-      app.py                  # FastAPI app factory
-      routes.py               # /health, /teams, /predict
-      deps.py                 # loaders + matchup_features()
-      schemas.py              # Pydantic I/O models
-      normalizer.py           # robust team normalization (codes/names/aliases)
-      errors.py               # HTTP 422 helper
-  tests/                      # 100% coverage, unit + integration
-  artifacts/                  # model.joblib, metrics.json (generated)
-  data_cache/                 # games.csv, features.csv (generated)
-  scripts/
-    coverage_gaps.py          # prints remaining coverage holes
-  pyproject.toml              # deps, pytest/ruff/mypy config
-  Makefile                    # one-liners for everything
-```
-
----
 
 ## Pipeline
 
-### 1) Fetch
-Scrapes Basketball-Reference and writes `data_cache/games.csv`.
+Run everything end to end:
 
 ```bash
-make fetch
-# or: python -m src.data.fetch --seasons "2024 2025"
+make pipeline
 ```
 
-### 2) Features
-Builds rolling 10-game form, rest days, and Elo deltas → `data_cache/features.csv`.
+Or run each step:
 
-```bash
-make features
-# or: python -m src.data.features
-```
+- Fetch: `make fetch` (or `python -m src.data.fetch --seasons "2024 2025"`) → `data_cache/games.csv`.
+- Features: `make features` → rolling form, rest days, and Elo deltas in `data_cache/features.csv`.
+- Train: `make train MODELS="logreg rf"` → best model at `artifacts/model.joblib` with metrics in `artifacts/metrics.json`.
 
-### 3) Train
-Trains one or more models and persists the best to `artifacts/model.joblib`.
+Use `OFFLINE=1` to seed from fixtures. Add `PRESERVE=1` to keep existing caches. Control seasons and model lists with `SEASONS` and `MODELS`.
 
-```bash
-make train MODELS="logreg rf"
-# or: python -m src.model.train --models "logreg rf"
-```
+## API
 
-Selection uses ROC-AUC, then Accuracy, with NaN-safe comparisons.
-
----
-
-## Service (FastAPI)
-
-Start dev server:
+Start the service:
 
 ```bash
 make serve
-# uvicorn src.service.app:app --reload
+# uvicorn src.service.app:app --reload --port 5000
 ```
 
 Endpoints:
 
-- `GET /health` → `{"ok": true}`
-- `GET /teams`  → canonical team labels from your historical data
-- `GET /predict?home=NYK&away=BOS&date=2025-02-01` → probabilities with feature deltas
+- `GET /v1/health` → `{"ok": true}`
+- `GET /v1/teams` → canonical team codes from cached games
+- `GET /v1/predict?home=NYK&away=BOS&date=2025-01-01` → win probability and feature deltas
 
-**Team normalization** (`service/normalizer.py`):
-- Accepts **codes** (`NYK`, `BOS`, `LAL`), **full names** (`New York Knicks`, `Boston Celtics`),
-  and **common aliases** (`LA Clippers`, `Golden State`, `Trail Blazers`, …).
-- Noise-tolerant to spaces/case/punctuation. Unknown teams → HTTP 422 with a clear message.
+Team inputs accept codes, full names, and common aliases. Unknown teams return HTTP 422 with a clear message. The service reads artifacts only; regenerate them before deploying.
 
-**Feature ordering**:
-- Prefer `model.feature_columns_` (if persisted at train time).
-- Else fall back to `["delta_off","delta_def","delta_rest","delta_elo"]` truncated to `n_features_in_`.
+## Tests and QA
 
----
-
-## Testing & Coverage
-
-- Tests are exhaustive and isolated; paths are sandboxed by `tests/conftest.py`.
-- We gate coverage and provide multiple report styles.
-
-Useful targets:
+Common checks:
 
 ```bash
-make test            # quiet
-make test-verbose    # -vv and durations
-make test-parallel   # pytest-xdist
-
-make test-cov        # HTML + term-missing + XML
-make cov-open        # open HTML report
-make test-cov-gaps   # print uncovered files/lines/branches (scripts/coverage_gaps.py)
-make test-cov-diff   # changed-lines coverage vs origin/main
+make lint
+make type
+make test
+make test-cov
+make check          # fmt + lint + type + coverage gate
 ```
 
-Notes:
-- Right gutter percentages in `pytest-sugar` are **per-file** progress while tests stream.
-  The HTML report (`coverage_html/index.html`) and the XML gate are the source of truth.
-- We enable **branch coverage** and **per-test** dynamic contexts for deep inspection.
+Coverage runs produce HTML and XML reports. Use `make cov-open`, `make test-cov-gaps`, or `make test-cov-diff` for deeper inspection.
 
----
+## Layout
 
-## Makefile Knobs
-
-You can override these at the CLI:
-
-```bash
-make SEASONS="2024 2025" MODELS="logreg rf" PYTEST_FLAGS="-vv -ra"
-make COMPARE_BRANCH="origin/main" test-cov-diff
+```
+src/
+  config.py           # path config for data and artifacts
+  data/               # scraping and feature engineering
+  model/              # training and model selection
+  service/            # FastAPI app, routes, schemas, normalizer
+  utils/              # logging helpers
+tests/                # unit and integration tests (fixtures included)
+artifacts/            # generated model + metrics
+data_cache/           # generated games and features CSVs
+Makefile              # pipeline, QA, and serve targets
+pyproject.toml        # deps and tooling config
 ```
 
-Key vars:
-- `SEASONS`: seasons to fetch (space-separated).
-- `MODELS`: model list to train (e.g., `"logreg rf"`).
-- `PYTEST_FLAGS`: extra pytest flags.
-- `COMPARE_BRANCH`: base branch for diff coverage.
-
-Run `make help` for the full menu.
-
----
-
-## Requirements
-
-Everything is declared in `pyproject.toml`. Install dev tooling with:
-
-```bash
-python -m pip install -e '.[dev]'
-```
-
-Optional lockfile for CI/Docker:
-
-```bash
-make dev-requirements   # produces requirements-dev.txt via pip-tools
-```
-
----
-
-## Notes
-
-- Data source: [Basketball-Reference](https://www.basketball-reference.com/).
-- API-based sources exist but are often unreliable for historical consistency; BR is stable.
-- This project emphasizes **clarity, determinism, and testability** over model flash.
+Data comes from Basketball-Reference. Treat `data_cache/` and `artifacts/` as generated outputs; rebuild them after code or schema changes.
