@@ -17,7 +17,6 @@ repos:
           - pydantic>=2.7
           - types-requests
 
-  # Optional but handy
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v6.0.0
     hooks:
@@ -26,12 +25,10 @@ repos:
       - id: check-yaml
       - id: check-toml
 
-  # Run pytest from *your* venv
   - repo: local
     hooks:
       - id: pytest
         name: pytest
-        entry: pytest -q
+        entry: python -m pytest -q tests
         language: system
         pass_filenames: false
-        stages: [pre-commit]   # don’t run on push unless you want to

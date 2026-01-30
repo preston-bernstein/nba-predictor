@@ -49,26 +49,32 @@ def test_build_features_df_no_nans_and_types():
 
     assert feats["GAME_DATE"].is_monotonic_increasing
 
+
 def test_build_features_df_raises_on_unknown_team_in_input_home():
-    games = pd.DataFrame([{
-        "GAME_DATE": pd.to_datetime("2024-10-20"),
-        "home_team": "Gotham Rogues",
-        "home_score": 100,
-        "away_team": "NYK",
-        "away_score": 90,
-        "home_win": 1,
-    }])
+    games = pd.DataFrame([
+        {
+            "GAME_DATE": pd.to_datetime("2024-10-20"),
+            "home_team": "Gotham Rogues",
+            "home_score": 100,
+            "away_team": "NYK",
+            "away_score": 90,
+            "home_win": 1,
+        }
+    ])
     with pytest.raises(ValueError, match=r"Unknown team in input games: 'Gotham Rogues'"):
         build_features_df(games)
 
+
 def test_build_features_df_raises_on_unknown_team_in_input_away():
-    games = pd.DataFrame([{
-        "GAME_DATE": pd.to_datetime("2024-10-21"),
-        "home_team": "NYK",
-        "home_score": 95,
-        "away_team": "Metropolis Meteors",
-        "away_score": 97,
-        "home_win": 0,
-    }])
+    games = pd.DataFrame([
+        {
+            "GAME_DATE": pd.to_datetime("2024-10-21"),
+            "home_team": "NYK",
+            "home_score": 95,
+            "away_team": "Metropolis Meteors",
+            "away_score": 97,
+            "home_win": 0,
+        }
+    ])
     with pytest.raises(ValueError, match=r"Unknown team in input games: 'Metropolis Meteors'"):
         build_features_df(games)
