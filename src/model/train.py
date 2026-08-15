@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import argparse
-from pathlib import Path
 
 from src import config
 from src.model.trainer import Trainer
@@ -10,9 +9,8 @@ from src.model.trainer import Trainer
 def main(models: list[str] | None = None) -> None:
     models = models or ["logreg"]  # keep default behavior
     trainer = Trainer(
-        feats_path=Path(config.FEATS),
-        art_dir=Path(config.ART_DIR),
-        pref_features=("delta_off", "delta_def", "delta_rest", "delta_elo"),
+        feats_path=config.FEATS,
+        art_dir=config.ART_DIR,
         min_features=2,
         test_frac=0.25,
     )

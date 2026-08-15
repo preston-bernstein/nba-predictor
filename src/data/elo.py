@@ -7,6 +7,8 @@ from dataclasses import dataclass
 import numpy as np
 import pandas as pd
 
+from src import config
+
 logger = logging.getLogger(__name__)
 
 
@@ -34,8 +36,7 @@ def add_elo(games: pd.DataFrame, cfg: EloConfig | None = None) -> pd.DataFrame:
     # Avoid B008: instantiate inside the function
     cfg = EloConfig() if cfg is None else cfg
 
-    required = {"GAME_DATE", "home_team", "home_score", "away_team", "away_score"}
-    missing = required - set(games.columns)
+    missing = config.REQUIRED_GAME_COLS - set(games.columns)
     if missing:
         raise ValueError(f"add_elo: missing columns: {sorted(missing)}")
 

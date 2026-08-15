@@ -16,7 +16,6 @@ from .br_client import fetch_season_html
 from .br_parse import parse_games
 
 OUT_DIR = config.DATA_DIR
-OUT_DIR.mkdir(parents=True, exist_ok=True)
 
 # --- Local fallbacks to avoid ingest failures if normalizer isn’t picked up ---
 # (Uppercased, single-spaced keys.)
@@ -171,7 +170,8 @@ def fetch_seasons(seasons: list[int]) -> pd.DataFrame:
 
 def main(seasons: list[int]) -> None:
     games = fetch_seasons(seasons)
-    out_csv = OUT_DIR / "games.csv"
+    OUT_DIR.mkdir(parents=True, exist_ok=True)
+    out_csv = OUT_DIR / config.GAMES_FILE
     games.to_csv(out_csv, index=False)
     logging.info("saved %d games -> %s", len(games), out_csv)
 

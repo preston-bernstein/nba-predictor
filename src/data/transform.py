@@ -4,6 +4,8 @@ from typing import Final
 
 import pandas as pd
 
+from src import config
+
 # NEW: use the service normalizer so train-time matches serve-time
 from src.service.normalizer import TeamNormalizeError, normalize_team
 
@@ -25,6 +27,7 @@ def _canonize_team_cols(g: pd.DataFrame) -> pd.DataFrame:
         except TeamNormalizeError as err:
             raise ValueError(f"Unknown team in input games: {v!r}") from err
 
+    g = g.copy()
     g["home_team"] = g["home_team"].map(_norm)
     g["away_team"] = g["away_team"].map(_norm)
     return g
@@ -95,7 +98,7 @@ def add_pregame_deltas(gm: pd.DataFrame) -> pd.DataFrame:
 
 def merge_elo_features(gm: pd.DataFrame) -> pd.DataFrame:
     """Compute Elo pregame ratings and attach delta_elo."""
-    base_cols = ["GAME_DATE", "home_team", "home_score", "away_team", "away_score"]
+    base_cols = list(config.REQUIRED_GAME_COLS)
     elo_df = add_elo(gm[base_cols])
     g3 = elo_df.merge(gm, on=base_cols, how="inner")
     g3["delta_elo"] = g3["home_elo_pre"] - g3["away_elo_pre"]

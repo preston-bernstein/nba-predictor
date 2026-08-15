@@ -7,6 +7,8 @@ import shutil
 from collections.abc import Mapping
 from pathlib import Path
 
+from src import config
+
 from .metrics import selection_key  # (roc_auc (NaN→-inf), accuracy)
 
 Metrics = Mapping[str, float]
@@ -30,7 +32,7 @@ def persist_best_model(art_dir: Path, best_name: str) -> Path:
     return the destination path.
     """
     src = art_dir / f"model-{best_name}.joblib"
-    dst = art_dir / "model.joblib"
+    dst = art_dir / config.MODEL_FILE
     if not src.exists():
         raise FileNotFoundError(f"missing trained model file: {src}")
     art_dir.mkdir(parents=True, exist_ok=True)
@@ -42,7 +44,7 @@ def write_metrics(art_dir: Path, metrics: Mapping[str, object]) -> Path:
     """
     Write metrics JSON to artifacts/metrics.json and return the path.
     """
-    path = art_dir / "metrics.json"
+    path = art_dir / config.METRICS_FILE
     art_dir.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(metrics, indent=2))
     return path

@@ -4,9 +4,7 @@ import numpy as np
 import pandas as pd
 
 from src.data.elo import add_elo
-
-ROLL = 10
-MINP = 3
+from src.data.transform import MINP, ROLL
 
 
 def _last_rest_days(df: pd.DataFrame, team: str) -> int | None:
@@ -17,18 +15,26 @@ def _last_rest_days(df: pd.DataFrame, team: str) -> int | None:
 
 
 def _last_elo(df: pd.DataFrame, team: str) -> float | None:
-    # compute pregame Elo then read the team's last pregame rating
+    # Compute pregame Elo, then read the team's most recent pregame rating --
+    # whichever of their last home/away appearance is actually more recent
+    # (a team's last game may have been away even if it has home games too).
     g = add_elo(df[["GAME_DATE", "home_team", "home_score", "away_team", "away_score"]])
-    h = g[g["home_team"] == team][["home_elo_pre"]].tail(1)
-    a = g[g["away_team"] == team][["away_elo_pre"]].tail(1)
+    h = g[g["home_team"] == team][["GAME_DATE", "home_elo_pre"]].tail(1)
+    a = g[g["away_team"] == team][["GAME_DATE", "away_elo_pre"]].tail(1)
 
-    last_home = float(h["home_elo_pre"].iloc[-1]) if not h.empty else None
-    last_away = float(a["away_elo_pre"].iloc[-1]) if not a.empty else None
+    last_home = (
+        (h["GAME_DATE"].iloc[-1], float(h["home_elo_pre"].iloc[-1])) if not h.empty else None
+    )
+    last_away = (
+        (a["GAME_DATE"].iloc[-1], float(a["away_elo_pre"].iloc[-1])) if not a.empty else None
+    )
 
+    if last_home is not None and last_away is not None:
+        return last_home[1] if last_home[0] >= last_away[0] else last_away[1]
     if last_home is not None:
-        return last_home
+        return last_home[1]
     if last_away is not None:
-        return last_away
+        return last_away[1]
     return None
 
 
