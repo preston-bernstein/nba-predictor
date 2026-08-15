@@ -24,6 +24,7 @@ dependencies = [
   "requests>=2.31",
   "beautifulsoup4>=4.12",
   "lxml>=4.9",
+  "fleet-logging @ git+ssh://git@github.com/preston-bernstein/fleet-logging.git@fab3ce04dbd1b16479527fe4a512c6f8d1f960fb",
 ]
 
 [project.optional-dependencies]
@@ -93,7 +94,9 @@ module = [
   "joblib.*",
   "fastapi.*",
   "mangum",
-  "mangum.*"
+  "mangum.*",
+  "fleet_logging",
+  "fleet_logging.*"
 ]
 ignore_missing_imports = true
 
