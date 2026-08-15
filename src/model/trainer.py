@@ -39,7 +39,7 @@ class Trainer:
         self,
         feats_path: Path | None = None,
         art_dir: Path | None = None,
-        pref_features: Iterable[str] = ("delta_off", "delta_def", "delta_rest", "delta_elo"),
+        pref_features: Iterable[str] = config.FEATURE_ORDER,
         min_features: int = 2,
         test_frac: float = 0.25,
     ) -> None:
@@ -58,6 +58,7 @@ class Trainer:
     def train_models(
         self,
         model_names: Iterable[str],
+        feature_names: list[str],
         X_tr: npt.ArrayLike,
         y_tr: npt.ArrayLike,
         X_te: npt.ArrayLike,
@@ -66,6 +67,10 @@ class Trainer:
         runs: dict[str, dict[str, float]] = {}
         for name, model in get_models(model_names):
             m = metrics_mod.fit_and_score(model, X_tr, y_tr, X_te, y_te)
+            # Persist the exact trained feature order on the model itself so
+            # serving can validate against it instead of guessing (see
+            # src/service/routes.py's feature_columns_ check).
+            model.feature_columns_ = list(feature_names)
             # ensure artifact dir exists before dumping
             self.art_dir.mkdir(parents=True, exist_ok=True)
             joblib.dump(model, self.art_dir / f"model-{name}.joblib")
@@ -79,7 +84,7 @@ class Trainer:
         X_te, y_te = to_xy(test_df, used_feats)
 
         # 2) train each requested model
-        runs = self.train_models(model_names, X_tr, y_tr, X_te, y_te)
+        runs = self.train_models(model_names, used_feats, X_tr, y_tr, X_te, y_te)
 
         # 3) choose best & persist stable path
         best_name, best_metrics = pick_best(runs)

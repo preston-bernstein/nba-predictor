@@ -7,6 +7,7 @@ import unicodedata
 from collections.abc import Iterable
 
 import pandas as pd
+from fleet_logging import configure_logging
 
 from src import config
 from src.service.normalizer import TeamNormalizeError, normalize_team
@@ -15,9 +16,6 @@ from .br_client import fetch_season_html
 from .br_parse import parse_games
 
 OUT_DIR = config.DATA_DIR
-OUT_DIR.mkdir(parents=True, exist_ok=True)
-
-logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
 
 # --- Local fallbacks to avoid ingest failures if normalizer isn’t picked up ---
 # (Uppercased, single-spaced keys.)
@@ -172,12 +170,18 @@ def fetch_seasons(seasons: list[int]) -> pd.DataFrame:
 
 def main(seasons: list[int]) -> None:
     games = fetch_seasons(seasons)
-    out_csv = OUT_DIR / "games.csv"
+    OUT_DIR.mkdir(parents=True, exist_ok=True)
+    out_csv = OUT_DIR / config.GAMES_FILE
     games.to_csv(out_csv, index=False)
     logging.info("saved %d games -> %s", len(games), out_csv)
 
 
 def _cli() -> None:  # pragma: no cover
+    # This module doubles as a standalone CLI entry point (`python -m
+    # src.data.fetch`, wired to `make fetch`), so it configures logging here
+    # rather than at import time -- importing this module as a library (e.g.
+    # from tests or another package) must never install a handler.
+    configure_logging("nba-predictor")
     ap = argparse.ArgumentParser()
     ap.add_argument(
         "--from",
