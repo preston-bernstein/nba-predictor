@@ -1,7 +1,11 @@
 from __future__ import annotations
 
+import logging
+
 from fastapi import FastAPI, HTTPException, Request, status
 from fastapi.responses import JSONResponse
+
+logger = logging.getLogger(__name__)
 
 __all__ = ["unprocessable", "bad_request", "not_found"]
 
@@ -27,9 +31,11 @@ def register_handlers(app: FastAPI) -> None:
     @app.exception_handler(ValueError)
     async def _value_error_handler(_: Request, exc: ValueError) -> JSONResponse:
         # Domain/validation errors thrown inside code
+        logger.warning("ValueError handled as 422: %s", exc)
         return JSONResponse(status_code=422, content={"detail": str(exc)})
 
     @app.exception_handler(KeyError)
     async def _key_error_handler(_: Request, exc: KeyError) -> JSONResponse:
         # for dict lookups on team codes, etc
+        logger.warning("KeyError handled as 400: %s", exc)
         return JSONResponse(status_code=400, content={"detail": f"Missing key: {exc}"})

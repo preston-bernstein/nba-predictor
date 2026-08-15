@@ -96,6 +96,24 @@ def test_load_model_reads_and_caches(tmp_path, monkeypatch):
     assert info2.hits == info1.hits + 1
 
 
+def test_load_games_missing_file_logs_and_reraises(tmp_path, monkeypatch, caplog):
+    monkeypatch.setattr(deps_mod.config, "GAMES", tmp_path / "does-not-exist.csv", raising=True)
+
+    with caplog.at_level("ERROR", logger="src.service.deps"), pytest.raises(OSError):
+        deps_mod.load_games()
+
+    assert any("failed to load games" in rec.message for rec in caplog.records)
+
+
+def test_load_model_missing_file_logs_and_reraises(tmp_path, monkeypatch, caplog):
+    monkeypatch.setattr(deps_mod.config, "MODEL", tmp_path / "does-not-exist.joblib", raising=True)
+
+    with caplog.at_level("ERROR", logger="src.service.deps"), pytest.raises(OSError):
+        deps_mod.load_model()
+
+    assert any("failed to load model" in rec.message for rec in caplog.records)
+
+
 def test_matchup_features_wires_core_and_handles_return(monkeypatch):
     dummy_df = pd.DataFrame({"GAME_DATE": pd.to_datetime(["2024-10-01"])})
     monkeypatch.setattr(deps_mod, "load_games_through", lambda date=None: dummy_df, raising=True)
@@ -109,12 +127,9 @@ def test_matchup_features_wires_core_and_handles_return(monkeypatch):
 
     monkeypatch.setattr(deps_mod.core, "compute_matchup_deltas", fake_compute, raising=True)
 
-    out_map = deps_mod.matchup_features("NYK", "BOS", date="2024-11-01", return_dict=True)
+    out_map = deps_mod.matchup_features("NYK", "BOS", date="2024-11-01")
     assert out_map["delta_off"] == 1.2 and out_map["delta_def"] == -0.3
     assert seen["args"] == ("NYK", "BOS")
-
-    d_off, d_def = deps_mod.matchup_features("NYK", "BOS")
-    assert (d_off, d_def) == (1.2, -0.3)
 
 
 def test_matchup_features_propagates_domain_errors(monkeypatch):

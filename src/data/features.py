@@ -1,11 +1,13 @@
-from pathlib import Path
+import logging
 
 import pandas as pd
 
+from src import config
+
 from .transform import build_features_df  # <- the pure transformer
 
-IN_PATH = Path("data_cache/games.csv")
-OUT_PATH = Path("data_cache/features.csv")
+IN_PATH = config.GAMES
+OUT_PATH = config.FEATS
 
 
 def build_features() -> None:
@@ -13,7 +15,7 @@ def build_features() -> None:
     feats = build_features_df(games)
     OUT_PATH.parent.mkdir(parents=True, exist_ok=True)
     feats.to_csv(OUT_PATH, index=False)
-    print(f"Saved {len(feats):,} rows -> {OUT_PATH}")
+    logging.info("saved %d rows -> %s", len(feats), OUT_PATH)
 
 
 def _main() -> None:
