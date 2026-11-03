@@ -3,7 +3,10 @@ from __future__ import annotations
 import logging
 import os
 
-from fleet_logging import configure_logging
+try:
+    from fleet_logging import configure_logging
+except ImportError:  # private package; the dev image does not install it
+    configure_logging = None
 
 
 def setup() -> None:
@@ -25,4 +28,10 @@ def setup() -> None:
     """
     level_name = os.getenv("LOG_LEVEL", "INFO").upper()
     level = getattr(logging, level_name, logging.INFO)
+    if configure_logging is None:
+        logging.basicConfig(
+            level=level, format="%(asctime)s %(levelname)s %(name)s %(message)s", force=True
+        )
+        logging.getLogger(__name__).warning("fleet_logging not installed; using stdlib logging")
+        return
     configure_logging("nba-predictor", level=level)
