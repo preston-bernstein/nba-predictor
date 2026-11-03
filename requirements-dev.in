@@ -10,3 +10,4 @@ types-requests
 types-beautifulsoup4
 httpx
 requests
+types-jsonschema
