@@ -51,6 +51,8 @@ Team inputs accept codes, full names, and common aliases. Unknown teams return H
 
 ## Kafka consumer (optional)
 
+Event contract, topics, and how to inspect lag: [nba-infra/kafka/README.md](https://github.com/preston-bernstein/nba-infra/blob/main/kafka/README.md).
+
 The consumer keeps a prediction ledger. It runs only when `KAFKA_BROKERS` is set.
 
 ```bash
