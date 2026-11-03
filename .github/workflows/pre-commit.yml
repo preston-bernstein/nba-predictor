@@ -33,6 +33,17 @@ jobs:
         with:
           path: ~/.cache/pre-commit
           key: ${{ runner.os }}-precommit-${{ hashFiles('.pre-commit-config.yaml') }}
+      - name: Load fleet-logging deploy key
+        uses: webfactory/ssh-agent@e83874834305fe9a4a2997156cb26c5de65a8555 # v0.10.0
+        with:
+          ssh-private-key: ${{ secrets.FLEET_LOGGING_DEPLOY_KEY }}
       - run: python -m pip install -U pip pre-commit
+      - name: Install project with dev extras (the pytest hook runs in this environment)
+        run: |
+          if [ -f constraints.txt ]; then
+            pip install -e '.[dev]' -c constraints.txt
+          else
+            pip install -e '.[dev]'
+          fi
       - name: Run pre-commit hooks
         run: pre-commit run --all-files --show-diff-on-failure --color always
