@@ -8,12 +8,14 @@ import numpy as np
 from fastapi import APIRouter, Depends
 
 from src import config
+from src.events.ledger import ledger_path, read_summary
 
 from . import deps
 from .errors import unprocessable  # tiny helper -> HTTP 422
 from .schemas import (
     ErrorResponse,
     HealthResponse,
+    LedgerSummary,
     PredictQuery,
     PredictResponse,
     TeamListResponse,
@@ -41,6 +43,12 @@ def teams() -> TeamListResponse:
     df = load_games()
     all_teams = sorted(set(df["home_team"]).union(df["away_team"]))
     return TeamListResponse(teams=all_teams)
+
+
+@router.get("/ledger/summary", response_model=LedgerSummary)
+def ledger_summary() -> LedgerSummary:
+    """Read-only counts from the prediction ledger."""
+    return LedgerSummary(**read_summary(ledger_path()))
 
 
 @router.get(

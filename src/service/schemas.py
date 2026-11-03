@@ -9,6 +9,7 @@ __all__ = [
     "FeatureDeltas",
     "PredictResponse",
     "ErrorResponse",
+    "LedgerSummary",
 ]
 
 
@@ -44,3 +45,10 @@ class PredictResponse(BaseModel):
     as_of: str | None = None
     features: FeatureDeltas
     prob_home_win: float = Field(ge=0.0, le=1.0)
+
+
+class LedgerSummary(BaseModel):
+    games: int
+    settled: int
+    graded: int  # settled games that have a stored prediction
+    accuracy: float | None = None  # null when graded is 0
