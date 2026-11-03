@@ -16,6 +16,8 @@ repos:
         additional_dependencies:
           - pydantic>=2.7
           - types-requests
+          - types-jsonschema
+          - confluent-kafka
 
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v6.0.0
