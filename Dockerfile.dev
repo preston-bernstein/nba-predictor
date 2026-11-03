@@ -15,4 +15,7 @@ RUN pip install -U pip && \
 
 COPY . .
 
+# The Kafka consumer uses this same image. Run it with another command:
+#   python -m src.events.consumer
+# It needs KAFKA_BROKERS, and the same NBA_DATA_DIR and NBA_ART_DIR as the API.
 CMD ["uvicorn", "src.service.app:app", "--host", "0.0.0.0", "--port", "5000"]

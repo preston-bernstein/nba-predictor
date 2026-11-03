@@ -45,8 +45,29 @@ Endpoints:
 - `GET /v1/health` → `{"ok": true}`
 - `GET /v1/teams` → canonical team codes from cached games
 - `GET /v1/predict?home=NYK&away=BOS&date=2025-01-01` → win probability and feature deltas
+- `GET /v1/ledger/summary` → `{"games", "settled", "graded", "accuracy"}` from the prediction ledger. `graded` counts settled games that have a stored prediction. `accuracy` is null when `graded` is 0.
 
 Team inputs accept codes, full names, and common aliases. Unknown teams return HTTP 422 with a clear message. The service reads artifacts only; regenerate them before deploying.
+
+## Kafka consumer (optional)
+
+The consumer keeps a prediction ledger. It runs only when `KAFKA_BROKERS` is set.
+
+```bash
+KAFKA_BROKERS=localhost:29092 python -m src.events.consumer
+```
+
+- It reads topic `game.updated` in group `predictor`. It commits each offset by hand, after the work is done. New groups start at the earliest offset.
+- The ledger is a SQLite file at `PREDICTION_LEDGER_PATH` (default `$NBA_DATA_DIR/prediction_ledger.sqlite`). The `GET /v1/ledger/summary` endpoint reads the same file.
+- A SCHEDULED or IN_PROGRESS event for a new game stores a prediction from the same code as `/v1/predict`. A stored prediction is never replaced.
+- A FINAL event stores the scores and outcome and marks the game settled. If there was no prediction, it is stored as null.
+- Each `eventId` is applied once. A repeat is skipped.
+- A bad message goes to `game.updated.dlq` with `dlq-*` headers, then is committed. Bad means invalid JSON, a schema mismatch, a tied final score, or a team the predictor cannot use.
+- Other errors are retried with a growing delay (up to `KAFKA_MAX_RETRIES`, default 5). If they last, the consumer exits without committing, and a restart tries the message again.
+- Other settings: `KAFKA_GROUP_ID`, `KAFKA_TOPIC`, `KAFKA_DLQ_TOPIC`.
+- The event contract is in `nba-infra/kafka/README.md`. A copy of the schema is in `src/events/game.updated.v1.json`; a test checks it matches `tests/fixtures/game.updated.v1.json`.
+
+Integration tests need a broker: `KAFKA_TEST_BROKERS=localhost:29092 pytest -m integration`. They make and delete their own topics and groups.
 
 ## Tests and QA
 
