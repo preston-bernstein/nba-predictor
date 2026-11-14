@@ -1,0 +1,3 @@
+# Existing findings accepted in the pack-compliance pass. One per line: <check> <path> <reason>
+name src/utils existing name; rename when the module is next reworked
+name tests/events_helpers.py existing name; rename when the module is next reworked
