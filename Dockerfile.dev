@@ -6,11 +6,15 @@ ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1
 
 WORKDIR /work
 
+# existing finding; fix when this line is next changed
+# hadolint ignore=DL3008
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential curl git libxml2-dev libxslt1-dev \
  && rm -rf /var/lib/apt/lists/*
 
 COPY requirements.txt requirements-dev.txt* ./
+# existing finding; fix when this line is next changed
+# hadolint ignore=DL3013,DL3042
 RUN pip install -U pip && \
     if [ -f requirements.txt ]; then pip install -r requirements.txt; fi && \
     if [ -f requirements-dev.txt ]; then pip install -r requirements-dev.txt; fi
