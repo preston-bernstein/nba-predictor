@@ -1,0 +1,133 @@
+{
+ "_reason": "Existing over-limit functions accepted on 2026-11-13; new code must stay within the limits. Fix them when touched.",
+ "functions": {
+  "scripts/coverage_gaps.py::main": {
+   "nd": 0,
+   "ccn": 27,
+   "param": 1,
+   "length": 88,
+   "token": 565,
+   "nloc": 71
+  },
+  "src/data/elo.py::add_elo": {
+   "nd": 0,
+   "ccn": 9,
+   "param": 2,
+   "length": 62,
+   "token": 349,
+   "nloc": 37
+  },
+  "src/events/consumer.py::__init__": {
+   "nd": 0,
+   "ccn": 1,
+   "param": 12,
+   "length": 27,
+   "token": 145,
+   "nloc": 27
+  },
+  "src/events/ledger.py::_upsert_final": {
+   "nd": 0,
+   "ccn": 1,
+   "param": 5,
+   "length": 29,
+   "token": 75,
+   "nloc": 28
+  },
+  "src/events/ledger.py::apply_final": {
+   "nd": 0,
+   "ccn": 1,
+   "param": 6,
+   "length": 7,
+   "token": 58,
+   "nloc": 7
+  },
+  "src/events/ledger.py::apply_prediction": {
+   "nd": 0,
+   "ccn": 1,
+   "param": 5,
+   "length": 6,
+   "token": 51,
+   "nloc": 6
+  },
+  "src/model/metrics.py::fit_and_score": {
+   "nd": 0,
+   "ccn": 2,
+   "param": 5,
+   "length": 32,
+   "token": 205,
+   "nloc": 21
+  },
+  "src/model/trainer.py::__init__": {
+   "nd": 0,
+   "ccn": 3,
+   "param": 6,
+   "length": 13,
+   "token": 91,
+   "nloc": 13
+  },
+  "src/model/trainer.py::train_models": {
+   "nd": 0,
+   "ccn": 2,
+   "param": 7,
+   "length": 21,
+   "token": 143,
+   "nloc": 17
+  },
+  "src/service/routes.py::predict": {
+   "nd": 0,
+   "ccn": 13,
+   "param": 1,
+   "length": 50,
+   "token": 264,
+   "nloc": 35
+  },
+  "tests/events_helpers.py::__init__": {
+   "nd": 0,
+   "ccn": 1,
+   "param": 7,
+   "length": 12,
+   "token": 80,
+   "nloc": 12
+  },
+  "tests/events_helpers.py::make_event": {
+   "nd": 0,
+   "ccn": 2,
+   "param": 7,
+   "length": 27,
+   "token": 194,
+   "nloc": 27
+  },
+  "tests/events_helpers.py::produce": {
+   "nd": 0,
+   "ccn": 4,
+   "param": 6,
+   "length": 9,
+   "token": 69,
+   "nloc": 9
+  },
+  "tests/integration/test_kafka_consumer.py::run_worker": {
+   "nd": 0,
+   "ccn": 4,
+   "param": 8,
+   "length": 25,
+   "token": 167,
+   "nloc": 24
+  },
+  "tests/unit/test_events_consumer.py::build": {
+   "nd": 0,
+   "ccn": 4,
+   "param": 5,
+   "length": 14,
+   "token": 87,
+   "nloc": 14
+  },
+  "tests/unit/test_service_deps.py::test__resolve_for_df_cases": {
+   "nd": 0,
+   "ccn": 2,
+   "param": 7,
+   "length": 11,
+   "token": 84,
+   "nloc": 11
+  }
+ }
+}
