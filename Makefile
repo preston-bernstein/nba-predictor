@@ -42,7 +42,7 @@ default: test
 
 help:
 	@echo "Targets:"
-	@echo "  dev                  - install package editable w/ dev deps"
+	@echo "  dev                  - uv sync --locked (package and dev group)"
 	@echo "  fetch|features|train - data/feature/model pipeline"
 	@echo "  test                 - run pytest (depends on trained model)"
 	@echo "  test-verbose         - verbose + durations"
@@ -59,13 +59,12 @@ help:
 
 # ---------- Dev setup ----------
 dev:
-	$(PY) -m pip install -U pip
-	$(PY) -m pip install -e '.[dev]'
-	@if command -v pre-commit >/dev/null 2>&1 && [ -f .pre-commit-config.yaml ]; then pre-commit install; else echo "pre-commit skipped (missing or not installed)"; fi
+	uv sync --locked
+	git config core.hooksPath .githooks
 
 dev-requirements:
 	$(PY) -m pip install -U pip pip-tools
-	pip-compile --extra dev pyproject.toml -o requirements-dev.txt
+	pip-compile --generate-hashes --output-file=requirements-dev.txt requirements-dev.in
 
 # ---------- Deployment ----------
 

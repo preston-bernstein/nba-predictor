@@ -7,7 +7,7 @@ from fastapi.responses import JSONResponse
 
 logger = logging.getLogger(__name__)
 
-__all__ = ["unprocessable", "bad_request", "not_found"]
+__all__ = ["bad_request", "not_found", "unprocessable"]
 
 
 def unprocessable(detail: str) -> HTTPException:

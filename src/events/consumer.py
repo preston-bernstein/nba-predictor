@@ -53,8 +53,8 @@ def producer_config(brokers: str) -> dict[str, Any]:
 class Worker:
     def __init__(
         self,
-        consumer: Any,
-        producer: Any,
+        consumer: Any,  # noqa: ANN401 -- untyped third-party object
+        producer: Any,  # noqa: ANN401 -- untyped third-party object
         ledger: Ledger,
         predict: Predict,
         *,
@@ -97,7 +97,7 @@ class Worker:
         finally:
             self.consumer.close()
 
-    def process(self, msg: Any) -> None:
+    def process(self, msg: Any) -> None:  # noqa: ANN401 -- untyped third-party object
         """Handle one message, retrying transient errors, then commit it."""
         attempt = 0
         while True:
@@ -117,7 +117,7 @@ class Worker:
                     raise _Stopped from exc
         self.consumer.commit(message=msg, asynchronous=False)
 
-    def _handle_once(self, msg: Any) -> None:
+    def _handle_once(self, msg: Any) -> None:  # noqa: ANN401 -- untyped third-party object
         try:
             result = handle_message(self.ledger, self.predict, msg.value())
         except PoisonMessage as poison:
@@ -126,7 +126,7 @@ class Worker:
             return
         logger.info("event %s at %s[%d]@%d", result, msg.topic(), msg.partition(), msg.offset())
 
-    def _publish_dlq(self, msg: Any, reason: str) -> None:
+    def _publish_dlq(self, msg: Any, reason: str) -> None:  # noqa: ANN401 -- untyped third-party object
         errors: list[Any] = []
         headers = [
             ("dlq-reason", reason),

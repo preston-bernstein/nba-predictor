@@ -6,13 +6,12 @@ Python 3.12 pipeline that scrapes Basketball-Reference, builds features, trains 
 
 ## Setup
 
-Create a virtual environment and install dev dependencies:
+Install the locked dependencies, including the dev group, and turn on the shared git hook:
 
 ```bash
-python -m venv .venv
+uv sync --locked
 source .venv/bin/activate
-python -m pip install -U pip
-python -m pip install -e '.[dev]'
+git config core.hooksPath .githooks
 ```
 
 ## Pipeline
@@ -62,7 +61,7 @@ KAFKA_BROKERS=localhost:29092 python -m src.events.consumer
 - It reads topic `game.updated` in group `predictor`. It commits each offset by hand, after the work is done. New groups start at the earliest offset.
 - The ledger is a SQLite file at `PREDICTION_LEDGER_PATH` (default `$NBA_DATA_DIR/prediction_ledger.sqlite`). The `GET /v1/ledger/summary` endpoint reads the same file.
 - A SCHEDULED or IN_PROGRESS event for a new game stores a prediction from the same code as `/v1/predict`. A stored prediction is never replaced.
-- A FINAL event stores the scores and outcome and marks the game settled. If there was no prediction, it is stored as null.
+- A FINAL event stores the scores and outcome, and the game is settled. If there was no prediction, it is stored as null.
 - Each `eventId` is applied once. A repeat is skipped.
 - A bad message goes to `game.updated.dlq` with `dlq-*` headers, then is committed. Bad means invalid JSON, a schema mismatch, a tied final score, or a team the predictor cannot use.
 - Other errors are retried with a growing delay (up to `KAFKA_MAX_RETRIES`, default 5). If they last, the consumer exits without committing, and a restart tries the message again.

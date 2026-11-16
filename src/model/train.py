@@ -16,8 +16,10 @@ def main(models: list[str] | None = None) -> None:
     )
 
     metrics = trainer.run(model_names=models)
-    print("Saved models in ->", trainer.art_dir)
-    print("Metrics ->", metrics)
+    # log-allow: print the training CLI prints its result for the caller
+    print("Saved models in ->", trainer.art_dir)  # noqa: T201 -- CLI prints the result
+    # log-allow: print the training CLI prints its result for the caller
+    print("Metrics ->", metrics)  # noqa: T201 -- CLI prints the result
 
 
 if __name__ == "__main__":  # pragma: no cover
