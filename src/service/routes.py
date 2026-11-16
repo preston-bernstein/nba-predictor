@@ -90,7 +90,7 @@ def predict(q: PredictQuery = Depends()) -> PredictResponse:  # noqa: B008
             f"Insufficient feature history for this date: missing {missing}; model expects {order}."
         )
 
-    X = np.array([[float(deltas[k]) for k in order]], dtype=float)
+    X = np.array([[float(deltas[k]) for k in order]], dtype=float)  # noqa: N806 -- sklearn X naming convention
     try:
         prob = float(model.predict_proba(X)[:, 1][0])
     except Exception:

@@ -38,7 +38,7 @@ def test_compute_matchup_deltas_ok():
     assert "delta_off" in deltas and "delta_def" in deltas
     assert isinstance(deltas["delta_off"], float)
     assert isinstance(deltas["delta_def"], float)
-    # optional keys may or may not be there; if present, they’re numbers.Real
+    # optional keys may or may not be there; if present, they're numbers.Real
     for k in ("delta_rest", "delta_elo"):
         if k in deltas:
             assert isinstance(deltas[k], numbers.Real)

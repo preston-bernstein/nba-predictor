@@ -62,10 +62,10 @@ def main(argv: list[str] | None = None) -> int:
 
     xml_path = Path(args.xml)
     if not xml_path.exists():
-        print("Run pytest with --cov-report=xml:coverage.xml first.", file=sys.stderr)
+        print("Run pytest with --cov-report=xml:coverage.xml first.", file=sys.stderr)  # noqa: T201 -- CLI report is the output
         return 2
 
-    tree = ET.parse(xml_path)
+    tree = ET.parse(xml_path)  # noqa: S314 -- reads the local coverage.xml that pytest-cov wrote
     root = tree.getroot()
 
     # file -> fn -> GapInfo
@@ -114,9 +114,8 @@ def main(argv: list[str] | None = None) -> int:
                     covered, total = int(covered_s), int(total_s)
                     if covered < total:
                         info.branches[ln] = (covered, total)
-                except Exception:
-                    # Ignore malformed entries
-                    pass
+                except (IndexError, ValueError):
+                    continue  # malformed entry: skip it
 
     printed_any = False
     for file, fdata in sorted(gaps.items()):
@@ -127,17 +126,17 @@ def main(argv: list[str] | None = None) -> int:
             if not missed and not bmiss:
                 continue
             if not header_printed:
-                print(f"\n{file}")
+                print(f"\n{file}")  # noqa: T201 -- CLI report is the output
                 header_printed = True
             printed_any = True
             if missed:
-                print(f"  - {fn}: missed lines -> {compress_ranges(missed)}")
+                print(f"  - {fn}: missed lines -> {compress_ranges(missed)}")  # noqa: T201 -- CLI report is the output
             if bmiss:
                 items = ", ".join(f"{ln} ({c}/{t})" for ln, (c, t) in sorted(bmiss.items()))
-                print(f"  - {fn}: partial branches -> {items}")
+                print(f"  - {fn}: partial branches -> {items}")  # noqa: T201 -- CLI report is the output
 
     if not printed_any:
-        print("No uncovered lines/branches detected (100% line/branch coverage).")
+        print("No uncovered lines/branches detected (100% line/branch coverage).")  # noqa: T201 -- CLI report is the output
 
     return 0
 

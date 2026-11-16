@@ -79,3 +79,6 @@ pip-wheel-metadata/
 AGENTS.md
 CLAUDE.md
 docs-internal/
+
+# Tools installed by the gate CI action
+node_modules/

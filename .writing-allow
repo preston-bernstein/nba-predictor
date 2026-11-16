@@ -1,0 +1,2 @@
+scripts/*-check.py # vendored pack gate script, copied unchanged from the pack
+scripts/core-lizard.py # vendored pack gate script, copied unchanged from the pack

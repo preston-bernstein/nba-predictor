@@ -56,7 +56,7 @@ def parse_event(value: bytes | None) -> dict[str, Any]:
     if error is not None:
         where = "/".join(str(p) for p in error.absolute_path) or "(root)"
         raise PoisonMessage(f"schema mismatch at {where}: {error.message}")
-    assert isinstance(event, dict)
+    assert isinstance(event, dict)  # noqa: S101 -- narrows the type for mypy; the schema requires an object
     return event
 
 

@@ -17,7 +17,7 @@ from .br_parse import parse_games
 
 OUT_DIR = config.DATA_DIR
 
-# --- Local fallbacks to avoid ingest failures if normalizer isn’t picked up ---
+# --- Local fallbacks to avoid ingest failures if normalizer isn't picked up ---
 # (Uppercased, single-spaced keys.)
 _FALLBACK_BR_FULL = {
     "ATLANTA HAWKS": "ATL",
@@ -188,7 +188,7 @@ def _cli() -> None:  # pragma: no cover
         dest="from_year",
         type=int,
         default=2019,
-        help="Start season end-year (e.g., 2019 means 2018–19).",
+        help="Start season end-year (e.g., 2019 means 2018-19).",
     )
     ap.add_argument(
         "--to",

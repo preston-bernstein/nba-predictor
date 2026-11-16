@@ -12,15 +12,15 @@ from sklearn.metrics import accuracy_score, roc_auc_score
 
 
 class ProbClassifier(Protocol):
-    def fit(self, X: npt.ArrayLike, y: npt.ArrayLike) -> Any: ...
-    def predict_proba(self, X: npt.ArrayLike) -> npt.NDArray[np.float64]: ...
+    def fit(self, X: npt.ArrayLike, y: npt.ArrayLike) -> Any: ...  # noqa: ANN401, N803 -- sklearn X naming convention
+    def predict_proba(self, X: npt.ArrayLike) -> npt.NDArray[np.float64]: ...  # noqa: N803 -- sklearn X naming convention
 
 
 def fit_and_score(
     model: ProbClassifier,
-    X_tr: npt.ArrayLike,
+    X_tr: npt.ArrayLike,  # noqa: N803 -- sklearn X naming convention
     y_tr: npt.ArrayLike,
-    X_te: npt.ArrayLike,
+    X_te: npt.ArrayLike,  # noqa: N803 -- sklearn X naming convention
     y_te: npt.ArrayLike,
 ) -> dict[str, float | int]:
     """Train a model and compute evaluation metrics on the test set."""
@@ -43,8 +43,8 @@ def fit_and_score(
     acc = float(accuracy_score(y_te_arr, y_hat))
 
     return {
-        "n_train": int(len(y_tr_arr)),
-        "n_test": int(len(y_te_arr)),
+        "n_train": len(y_tr_arr),
+        "n_test": len(y_te_arr),
         "accuracy": acc,
         "roc_auc": roc_auc,
     }

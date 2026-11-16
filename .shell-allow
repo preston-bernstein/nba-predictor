@@ -1,0 +1,6 @@
+scripts/core-validate.sh vendored pack gate script, copied unchanged from the pack
+scripts/gha-validate.sh vendored pack gate script, copied unchanged from the pack
+scripts/shell-validate.sh vendored pack gate script, copied unchanged from the pack
+scripts/docker-validate.sh vendored pack gate script, copied unchanged from the pack
+scripts/py-validate.sh vendored pack gate script, copied unchanged from the pack
+scripts/writing-validate.sh vendored pack gate script, copied unchanged from the pack

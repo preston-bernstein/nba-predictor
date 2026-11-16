@@ -28,7 +28,7 @@ def variants(word: str):
 
 def with_noise(s: str):
     """Sprinkle benign punctuation and whitespace; normalizer should handle it."""
-    punct = " -_.,!:/\\|—–"
+    punct = " -_.,!:/\\|—–"  # noqa: RUF001 -- the dashes are test data
     parts = s.split()
     if not parts:
         return [s]
@@ -153,15 +153,15 @@ def test_non_string_inputs_raise(bad):
         normalize_team(bad)  # type: ignore[arg-type]
 
 
-BENIGN_PUNCT = list(" -_.,!:/\\|—–")
+BENIGN_PUNCT = list(" -_.,!:/\\|—–")  # noqa: RUF001 -- the dashes are test data
 
 
 @settings(max_examples=120)
 @given(
     base_alias=sampled_from(list(ALIASES.keys()) + [n for n, _ in EXAMPLES]),
-    left=text(alphabet=sampled_from(BENIGN_PUNCT + [" "]), min_size=0, max_size=3),
-    right=text(alphabet=sampled_from(BENIGN_PUNCT + [" "]), min_size=0, max_size=3),
-    mid=lists(sampled_from(BENIGN_PUNCT + [" "]), min_size=0, max_size=2),
+    left=text(alphabet=sampled_from([*BENIGN_PUNCT, " "]), min_size=0, max_size=3),
+    right=text(alphabet=sampled_from([*BENIGN_PUNCT, " "]), min_size=0, max_size=3),
+    mid=lists(sampled_from([*BENIGN_PUNCT, " "]), min_size=0, max_size=2),
 )
 def test_property_noise_tolerance(base_alias, left, right, mid):
     target = ALIASES.get(base_alias.upper(), dict(EXAMPLES).get(base_alias))

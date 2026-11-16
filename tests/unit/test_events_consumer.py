@@ -76,7 +76,7 @@ def test_dlq_failure_does_not_commit_and_retries(tmp_path):
             else:
                 super().produce(*a, **k)
 
-    worker, _, consumer, producer, sleeps = build(tmp_path, producer=Flaky())
+    worker, _, consumer, _producer, sleeps = build(tmp_path, producer=Flaky())
     worker.process(FakeMessage(b"{bad"))
     assert sleeps == [0.5, 1.0]
     assert consumer.committed != []
