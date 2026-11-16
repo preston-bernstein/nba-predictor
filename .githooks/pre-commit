@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+# Shared pre-commit hook. Run once per clone: git config core.hooksPath .githooks
+# It runs the same gates as CI, because a hook can be skipped and CI cannot.
+set -euo pipefail
+
+root="$(git rev-parse --show-toplevel)"
+for gate in core-validate gha-validate shell-validate docker-validate py-validate writing-validate; do
+  bash "$root/scripts/$gate.sh"
+done
+python3 -I "$root/scripts/logging-check.py" "$root"

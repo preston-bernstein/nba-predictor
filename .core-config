@@ -1,1 +1,2 @@
-CORE_DUP_THRESHOLD=15  # existing duplication is 14.97%; lower it as clones are removed
+CORE_DUP_THRESHOLD=14.1  # existing duplication is 14.04%; lower it as clones are removed
+CORE_EXCLUDE=*/scripts/*-*.py  # vendored pack gate scripts, copied unchanged from the packs

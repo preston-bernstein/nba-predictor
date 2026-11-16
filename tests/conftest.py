@@ -13,7 +13,7 @@ def _determinism():
         import numpy as np
 
         np.random.seed(0)
-    except Exception:
+    except ImportError:
         pass
     yield
 

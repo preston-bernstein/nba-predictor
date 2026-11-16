@@ -30,7 +30,7 @@ def load_games() -> pd.DataFrame:
 
 
 @lru_cache(maxsize=1)
-def load_model() -> Any:
+def load_model() -> Any:  # noqa: ANN401 -- untyped third-party object
     try:
         return joblib.load(config.MODEL)
     except (OSError, EOFError):

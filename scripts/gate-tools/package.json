@@ -1,0 +1,9 @@
+{
+  "name": "gate-tools",
+  "private": true,
+  "description": "Pinned Node tools for the pack gates (core duplication check, shell tests).",
+  "devDependencies": {
+    "bats": "1.13.0",
+    "jscpd": "5.4.3"
+  }
+}

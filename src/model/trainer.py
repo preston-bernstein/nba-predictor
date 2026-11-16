@@ -59,9 +59,9 @@ class Trainer:
         self,
         model_names: Iterable[str],
         feature_names: list[str],
-        X_tr: npt.ArrayLike,
+        X_tr: npt.ArrayLike,  # noqa: N803 -- sklearn X naming convention
         y_tr: npt.ArrayLike,
-        X_te: npt.ArrayLike,
+        X_te: npt.ArrayLike,  # noqa: N803 -- sklearn X naming convention
         y_te: npt.ArrayLike,
     ) -> dict[str, dict[str, float]]:
         runs: dict[str, dict[str, float]] = {}
@@ -80,8 +80,8 @@ class Trainer:
     def run(self, model_names: Iterable[str] = ("logreg",)) -> dict[str, Any]:
         # 1) prep
         _, used_feats, train_df, test_df = self.prepare_data()
-        X_tr, y_tr = to_xy(train_df, used_feats)
-        X_te, y_te = to_xy(test_df, used_feats)
+        X_tr, y_tr = to_xy(train_df, used_feats)  # noqa: N806 -- sklearn X naming convention
+        X_te, y_te = to_xy(test_df, used_feats)  # noqa: N806 -- sklearn X naming convention
 
         # 2) train each requested model
         runs = self.train_models(model_names, used_feats, X_tr, y_tr, X_te, y_te)

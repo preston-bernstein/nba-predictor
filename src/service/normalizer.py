@@ -3,16 +3,16 @@ from __future__ import annotations
 import re
 
 __all__ = [
-    "normalize_team",
-    "TeamNormalizeError",
-    "CODES",
-    "BR_FULL",
     "ALIASES",
-    "canonical_name",
+    "BR_FULL",
+    "CODES",
     "_TEAMS_MAP_VERSION",
-    "codes",
+    "TeamNormalizeError",
     "aliases",
     "br_full",
+    "canonical_name",
+    "codes",
+    "normalize_team",
 ]
 
 
@@ -220,7 +220,7 @@ def _clean(s: str) -> str:
     if not s:
         return s
     s = s.upper()
-    # convert any non A–Z / 0–9 to spaces (includes _, dashes, punctuation, unicode dashes)
+    # convert any non A-Z / 0-9 to spaces (includes _, dashes, punctuation, unicode dashes)
     s = _PUNC_RE.sub(" ", s)
     s = re.sub(r"\s+", " ", s).strip()
     return s
