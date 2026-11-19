@@ -20,13 +20,13 @@ def test_setup_falls_back_to_stdlib_when_fleet_logging_missing(monkeypatch):
 
     monkeypatch.setattr(builtins, "__import__", blocked)
     monkeypatch.delitem(sys.modules, "fleet_logging", raising=False)
-    monkeypatch.delitem(sys.modules, "src.utils.logging", raising=False)
+    monkeypatch.delitem(sys.modules, "src.observability.logging", raising=False)
     monkeypatch.setenv("LOG_LEVEL", "WARNING")
 
     try:
-        mod = importlib.import_module("src.utils.logging")
+        mod = importlib.import_module("src.observability.logging")
     except ImportError:
-        pytest.fail("src.utils.logging must import when the optional logging package is absent")
+        pytest.fail("src.observability.logging must import without the optional logging package")
     mod.setup()
 
     assert logging.getLogger().level == logging.WARNING

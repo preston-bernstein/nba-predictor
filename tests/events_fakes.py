@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import uuid
 from pathlib import Path
+from typing import Any
 
 from src.events.handler import Prediction
 
@@ -12,17 +13,16 @@ SCHEMA_PATH = Path(__file__).resolve().parent / "fixtures" / "game.updated.v1.js
 
 
 def make_event(
-    *,
     game_id: str = "g-1",
     status_kind: str = "SCHEDULED",
-    home: tuple[str, str] = ("NYK", "New York Knicks"),
-    away: tuple[str, str] = ("BOS", "Boston Celtics"),
     score: tuple[int, int] = (0, 0),
-    event_id: str | None = None,
-    start_time: str = "2025-01-05T00:30:00Z",
+    **extra: Any,
 ) -> dict:
+    """A game.updated event. extra may set home, away, event_id and start_time."""
+    home = extra.get("home", ("NYK", "New York Knicks"))
+    away = extra.get("away", ("BOS", "Boston Celtics"))
     return {
-        "eventId": event_id or str(uuid.uuid4()),
+        "eventId": extra.get("event_id") or str(uuid.uuid4()),
         "eventType": "game.updated",
         "schemaVersion": 1,
         "occurredAt": "2025-01-04T12:00:00Z",
@@ -32,7 +32,7 @@ def make_event(
             "provider": "test",
             "homeTeam": {"id": home[0], "name": home[1]},
             "awayTeam": {"id": away[0], "name": away[1]},
-            "startTime": start_time,
+            "startTime": extra.get("start_time", "2025-01-05T00:30:00Z"),
             "status": status_kind.title(),
             "statusKind": status_kind,
             "score": {"home": score[0], "away": score[1]},
@@ -58,18 +58,15 @@ class FakePredict:
 
 
 class FakeMessage:
-    def __init__(
-        self,
-        value: bytes | None,
-        key: bytes | None = b"g-1",
-        topic: str = "game.updated",
-        partition: int = 1,
-        offset: int = 7,
-        error: object = None,
-    ) -> None:
-        self._value, self._key = value, key
-        self._topic, self._partition, self._offset = topic, partition, offset
-        self._error = error
+    """A Kafka message. fields may set key, topic, partition, offset and error."""
+
+    def __init__(self, value: bytes | None, **fields: Any) -> None:
+        self._value = value
+        self._key = fields.get("key", b"g-1")
+        self._topic = fields.get("topic", "game.updated")
+        self._partition = fields.get("partition", 1)
+        self._offset = fields.get("offset", 7)
+        self._error = fields.get("error")
 
     def value(self) -> bytes | None:
         return self._value
@@ -96,13 +93,14 @@ class FakeProducer:
         self.fail_delivery = fail_delivery
         self.unflushed = unflushed
 
-    def produce(self, topic, key=None, value=None, headers=None, on_delivery=None):
+    def produce(self, topic, **kw):
         self.sent.append({
             "topic": topic,
-            "key": key,
-            "value": value,
-            "headers": dict(headers or []),
+            "key": kw.get("key"),
+            "value": kw.get("value"),
+            "headers": dict(kw.get("headers") or []),
         })
+        on_delivery = kw.get("on_delivery")
         if on_delivery:
             on_delivery("boom" if self.fail_delivery else None, None)
 

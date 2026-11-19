@@ -2,7 +2,7 @@ import os
 import sqlite3
 
 import pytest
-from events_helpers import FakePredict, make_event, to_bytes
+from events_fakes import FakePredict, make_event, to_bytes
 from fastapi.testclient import TestClient
 
 from src.events.handler import handle_message

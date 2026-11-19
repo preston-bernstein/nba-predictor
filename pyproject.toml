@@ -108,6 +108,8 @@ module = [
   "sklearn.*",
   "httpx.*",
   "bs4.*",
+  "lxml",
+  "lxml.*",
   "joblib.*",
   "fastapi.*",
   "mangum",
@@ -122,6 +124,8 @@ branch = true
 source = ["src"]
 
 [tool.coverage.report]
+# The script entry-point guard runs only when the module is executed, never under pytest.
+exclude_also = ['if __name__ == "__main__":']
 show_missing = true
 skip_covered = true
 precision = 1

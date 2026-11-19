@@ -1,7 +1,7 @@
 import json
 
 import pytest
-from events_helpers import SCHEMA_PATH, make_event
+from events_fakes import SCHEMA_PATH, make_event
 from jsonschema import Draft202012Validator
 
 from src.events import handler
