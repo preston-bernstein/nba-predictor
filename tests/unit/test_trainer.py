@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from src.model.trainer import Trainer
+from src.model.trainer import Trainer, TrainSettings
 
 
 def _mini_features_df():
@@ -28,19 +28,25 @@ def _mini_features_df():
     })
 
 
+def _trainer(feats: Path, art: Path) -> Trainer:
+    return Trainer(
+        feats_path=feats,
+        art_dir=art,
+        settings=TrainSettings(
+            pref_features=("delta_off", "delta_def", "delta_rest", "delta_elo"),
+            min_features=2,
+            test_frac=0.25,
+        ),
+    )
+
+
 def test_trainer_runs_and_persists_best(tmp_path: Path):
     feats = tmp_path / "features.csv"
     _mini_features_df().to_csv(feats, index=False)
 
     art = tmp_path / "artifacts"
 
-    trainer = Trainer(
-        feats_path=feats,
-        art_dir=art,
-        pref_features=("delta_off", "delta_def", "delta_rest", "delta_elo"),
-        min_features=2,
-        test_frac=0.25,
-    )
+    trainer = _trainer(feats, art)
 
     metrics = trainer.run(model_names=["logreg", "rf"])
 
@@ -71,13 +77,7 @@ def test_trainer_respects_feature_preferences(tmp_path: Path):
     df.to_csv(feats, index=False)
     art = tmp_path / "artifacts"
 
-    trainer = Trainer(
-        feats_path=feats,
-        art_dir=art,
-        pref_features=("delta_off", "delta_def", "delta_rest", "delta_elo"),
-        min_features=2,
-        test_frac=0.25,
-    )
+    trainer = _trainer(feats, art)
     metrics = trainer.run(model_names=["logreg"])
 
     # features_used should reflect only available columns

@@ -27,6 +27,26 @@ def _expect_home(r_home: float, r_away: float, hadv: float) -> float:
     return 1.0 / (1.0 + math.pow(10.0, (r_away - (r_home + hadv)) / 400.0))
 
 
+def _scores(row: pd.Series) -> tuple[float, float]:
+    """Home and away score as floats. Raises ValueError for a missing or non-numeric score."""
+    try:
+        hs = float(row["home_score"])
+        as_ = float(row["away_score"])
+    except Exception as e:
+        logger.debug("Elo parse failed at %s: %r", row.get("GAME_DATE"), e)
+        raise ValueError(f"Non-numeric score at {row.get('GAME_DATE')}: {e}") from e
+    if np.isnan(hs) or np.isnan(as_):
+        raise ValueError(f"Non-numeric score at {row.get('GAME_DATE')}: NaN")
+    return hs, as_
+
+
+def _home_result(hs: float, as_: float) -> float:
+    """Actual outcome for HOME; ties count 0.5 (BR usually has no ties, but be safe)."""
+    if hs > as_:
+        return 1.0
+    return 0.0 if hs < as_ else 0.5
+
+
 def add_elo(games: pd.DataFrame, cfg: EloConfig | None = None) -> pd.DataFrame:
     """
     Compute pre-game Elo ratings per matchup (no leakage).
@@ -50,16 +70,7 @@ def add_elo(games: pd.DataFrame, cfg: EloConfig | None = None) -> pd.DataFrame:
         h = str(row["home_team"])
         a = str(row["away_team"])
 
-        # Coerce scores to float, handle missing/invalid gracefully
-        try:
-            hs = float(row["home_score"])
-            as_ = float(row["away_score"])
-        except Exception as e:
-            logger.debug("Elo parse failed at %s: %r", row.get("GAME_DATE"), e)
-            raise ValueError(f"Non-numeric score at {row.get('GAME_DATE')}: {e}") from e
-
-        if np.isnan(hs) or np.isnan(as_):
-            raise ValueError(f"Non-numeric score at {row.get('GAME_DATE')}: NaN")
+        hs, as_ = _scores(row)
 
         rh = ratings.get(h, cfg.base)
         ra = ratings.get(a, cfg.base)
@@ -71,13 +82,7 @@ def add_elo(games: pd.DataFrame, cfg: EloConfig | None = None) -> pd.DataFrame:
         # Expected scores (home advantage only affects expectation)
         e_home = _expect_home(rh, ra, cfg.home_adv)
 
-        # Actual outcomes; treat ties as 0.5 (BR usually has no ties, but be safe)
-        if hs > as_:
-            s_home = 1.0
-        elif hs < as_:
-            s_home = 0.0
-        else:
-            s_home = 0.5
+        s_home = _home_result(hs, as_)
 
         # Update post-game ratings
         rh_new = rh + cfg.k * (s_home - e_home)

@@ -11,6 +11,7 @@ import os
 import sqlite3
 from collections.abc import Callable, Iterator
 from contextlib import closing, contextmanager
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
@@ -33,6 +34,19 @@ CREATE TABLE IF NOT EXISTS processed_events (
     event_id TEXT PRIMARY KEY
 );
 """
+
+
+@dataclass(frozen=True)
+class Prediction:
+    prob_home_win: float
+    model_version: str
+
+
+@dataclass(frozen=True)
+class FinalScore:
+    home_score: int
+    away_score: int
+    outcome: str
 
 
 def ledger_path() -> Path:
@@ -113,20 +127,11 @@ class Ledger:
     def apply_noop(self, event_id: str) -> bool:
         return self._apply(event_id, None)
 
-    def apply_prediction(
-        self, event_id: str, game: dict[str, Any], prob: float, model_version: str
-    ) -> bool:
-        return self._apply(
-            event_id, lambda conn: self._upsert_prediction(conn, game, prob, model_version)
-        )
+    def apply_prediction(self, event_id: str, game: dict[str, Any], prediction: Prediction) -> bool:
+        return self._apply(event_id, lambda conn: self._upsert_prediction(conn, game, prediction))
 
-    def apply_final(
-        self, event_id: str, game: dict[str, Any], home_score: int, away_score: int, outcome: str
-    ) -> bool:
-        return self._apply(
-            event_id,
-            lambda conn: self._upsert_final(conn, game, home_score, away_score, outcome),
-        )
+    def apply_final(self, event_id: str, game: dict[str, Any], final: FinalScore) -> bool:
+        return self._apply(event_id, lambda conn: self._upsert_final(conn, game, final))
 
     def _apply(self, event_id: str, write: Callable[[sqlite3.Connection], None] | None) -> bool:
         try:
@@ -143,7 +148,7 @@ class Ledger:
 
     @staticmethod
     def _upsert_prediction(
-        conn: sqlite3.Connection, game: dict[str, Any], prob: float, model_version: str
+        conn: sqlite3.Connection, game: dict[str, Any], prediction: Prediction
     ) -> None:
         # An existing row, with or without a prediction, is left as it is.
         conn.execute(
@@ -158,19 +163,13 @@ class Ledger:
                 game["homeTeam"]["name"],
                 game["awayTeam"]["name"],
                 game["startTime"],
-                prob,
-                model_version,
+                prediction.prob_home_win,
+                prediction.model_version,
             ),
         )
 
     @staticmethod
-    def _upsert_final(
-        conn: sqlite3.Connection,
-        game: dict[str, Any],
-        home_score: int,
-        away_score: int,
-        outcome: str,
-    ) -> None:
+    def _upsert_final(conn: sqlite3.Connection, game: dict[str, Any], final: FinalScore) -> None:
         # The prediction columns are never in the UPDATE list.
         conn.execute(
             """
@@ -188,8 +187,8 @@ class Ledger:
                 game["homeTeam"]["name"],
                 game["awayTeam"]["name"],
                 game["startTime"],
-                home_score,
-                away_score,
-                outcome,
+                final.home_score,
+                final.away_score,
+                final.outcome,
             ),
         )

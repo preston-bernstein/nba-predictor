@@ -12,7 +12,8 @@ from src import config
 from src.service import routes
 from src.service.schemas import PredictQuery
 
-from .handler import PoisonMessage, Prediction
+from .handler import PoisonMessageError
+from .ledger import Prediction
 
 
 @lru_cache(maxsize=1)
@@ -43,4 +44,4 @@ def predict_game(game: dict[str, Any]) -> Prediction:
             first_detail = first_detail or str(exc.detail)
             continue
         return Prediction(result.prob_home_win, model_version())
-    raise PoisonMessage(f"cannot predict: {first_detail}")
+    raise PoisonMessageError(f"cannot predict: {first_detail}")
