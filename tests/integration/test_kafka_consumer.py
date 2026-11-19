@@ -13,12 +13,19 @@ import time
 import uuid
 
 import pytest
-from events_helpers import FakePredict, make_event, to_bytes
+from events_fakes import FakePredict, make_event, to_bytes
 
-from src.events.consumer import Worker, consumer_config, producer_config
+from src.events.consumer import (
+    Worker,
+    WorkerDeps,
+    WorkerSettings,
+    consumer_config,
+    producer_config,
+)
 from src.events.ledger import Ledger
 
 BROKERS = os.getenv("KAFKA_TEST_BROKERS")
+WORKER_TIMEOUT = 60
 
 pytestmark = [
     pytest.mark.integration,
@@ -45,23 +52,21 @@ def topics():
             f.result(timeout=30)
 
 
-def run_worker(tmp_path, topic, dlq, group, ledger, predict, until, timeout=60):
+def run_worker(topics, ledger, predict, until):
     from confluent_kafka import Consumer, Producer
 
-    consumer = Consumer(consumer_config(BROKERS, group_id=group))
-    worker = Worker(
-        consumer,
+    topic, dlq, group = topics
+    deps = WorkerDeps(
+        Consumer(consumer_config(BROKERS, group_id=group)),
         Producer(producer_config(BROKERS)),
         ledger,
         predict,
-        topic=topic,
-        dlq_topic=dlq,
-        group_id=group,
     )
+    worker = Worker(deps, WorkerSettings(topic=topic, dlq_topic=dlq, group_id=group))
     stop = threading.Event()
     t = threading.Thread(target=worker.run, args=(stop,), daemon=True)
     t.start()
-    deadline = time.time() + timeout
+    deadline = time.time() + WORKER_TIMEOUT
     try:
         while time.time() < deadline and not until():
             time.sleep(0.3)
@@ -101,7 +106,7 @@ def read_all(topic, timeout=30):
 
 
 def test_duplicate_event_applied_once(tmp_path, topics):
-    topic, dlq, group = topics
+    topic = topics[0]
     gid = f"it-{uuid.uuid4().hex[:8]}"
     ev = to_bytes(make_event(game_id=gid, event_id=str(uuid.uuid4())))
     later = to_bytes(make_event(game_id=gid, status_kind="IN_PROGRESS"))
@@ -110,10 +115,7 @@ def test_duplicate_event_applied_once(tmp_path, topics):
     ledger = Ledger(tmp_path / "l.sqlite")
     predict = FakePredict()
     run_worker(
-        tmp_path,
-        topic,
-        dlq,
-        group,
+        topics,
         ledger,
         predict,
         until=lambda: ledger.count_events() >= 2,
@@ -129,10 +131,7 @@ def test_bad_message_lands_in_dlq(tmp_path, topics):
     produce(topic, [(bad_key, b"{not json")])
     ledger = Ledger(tmp_path / "l.sqlite")
     run_worker(
-        tmp_path,
-        topic,
-        dlq,
-        group,
+        topics,
         ledger,
         FakePredict(),
         until=lambda: bool(read_all(dlq, timeout=2)),
@@ -151,15 +150,12 @@ def test_bad_message_lands_in_dlq(tmp_path, topics):
 
 
 def test_restart_resumes_from_committed_offset(tmp_path, topics):
-    topic, dlq, group = topics
+    topic = topics[0]
     ids = [f"it-{uuid.uuid4().hex[:8]}" for _ in range(3)]
     produce(topic, [(i.encode(), to_bytes(make_event(game_id=i))) for i in ids[:2]])
     first = Ledger(tmp_path / "first.sqlite")
     run_worker(
-        tmp_path,
-        topic,
-        dlq,
-        group,
+        topics,
         first,
         FakePredict(),
         until=lambda: all(first.get_game(i) for i in ids[:2]),
@@ -169,10 +165,7 @@ def test_restart_resumes_from_committed_offset(tmp_path, topics):
     # Fresh ledger: anything it holds was read again from Kafka in run two.
     second = Ledger(tmp_path / "second.sqlite")
     run_worker(
-        tmp_path,
-        topic,
-        dlq,
-        group,
+        topics,
         second,
         FakePredict(),
         until=lambda: second.get_game(ids[2]) is not None,

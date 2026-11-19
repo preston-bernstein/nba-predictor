@@ -36,7 +36,7 @@ def time_split(
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
     """Simple chronological split: last `test_frac` as test (at least `min_test`)."""
     n = len(df)
-    n_test = max(min_test, int(round(test_frac * n)))
+    n_test = max(min_test, round(test_frac * n))
     if n_test >= n:
         n_test = max(1, n - 1)  # keep at least 1 train row
     return df.iloc[:-n_test], df.iloc[-n_test:]
@@ -46,9 +46,9 @@ def to_xy(
     df: pd.DataFrame, features: list[str], target: str = "home_win"
 ) -> tuple[npt.NDArray[np.float64], npt.NDArray[np.int_]]:
     """Convert a frame to (X, y) numpy arrays."""
-    X: npt.NDArray[np.float64] = df[features].to_numpy(dtype=np.float64, copy=False)
+    x: npt.NDArray[np.float64] = df[features].to_numpy(dtype=np.float64, copy=False)
     y: npt.NDArray[np.int_] = df[target].to_numpy(dtype=np.int_, copy=False)
-    return X, y
+    return x, y
 
 
 def baseline_stats(test_df: pd.DataFrame) -> dict[str, float]:

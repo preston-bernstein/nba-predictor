@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 
-from ..utils.logging import setup as setup_logging
+from ..observability.logging import setup as setup_logging
 from .errors import register_handlers
 from .routes import router
 

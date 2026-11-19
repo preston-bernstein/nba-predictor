@@ -1,11 +1,11 @@
 from __future__ import annotations
 
 from collections.abc import Iterable
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
 import joblib
-import numpy.typing as npt
 import pandas as pd
 
 from src import config
@@ -19,6 +19,13 @@ from src.model.datasets import (
 )
 from src.model.models import get_models
 from src.model.select import persist_best_model, pick_best, write_metrics
+
+
+@dataclass(frozen=True)
+class TrainSettings:
+    pref_features: Iterable[str] = config.FEATURE_ORDER
+    min_features: int = 2
+    test_frac: float = 0.25
 
 
 class Trainer:
@@ -39,15 +46,14 @@ class Trainer:
         self,
         feats_path: Path | None = None,
         art_dir: Path | None = None,
-        pref_features: Iterable[str] = config.FEATURE_ORDER,
-        min_features: int = 2,
-        test_frac: float = 0.25,
+        settings: TrainSettings | None = None,
     ) -> None:
+        settings = settings or TrainSettings()
         self.feats_path = feats_path or config.FEATS
         self.art_dir = art_dir or config.ART_DIR
-        self.pref_features = list(pref_features)
-        self.min_features = int(min_features)
-        self.test_frac = float(test_frac)
+        self.pref_features = list(settings.pref_features)
+        self.min_features = int(settings.min_features)
+        self.test_frac = float(settings.test_frac)
 
     def prepare_data(self) -> tuple[pd.DataFrame, list[str], pd.DataFrame, pd.DataFrame]:
         df = load_features(self.feats_path)
@@ -59,14 +65,11 @@ class Trainer:
         self,
         model_names: Iterable[str],
         feature_names: list[str],
-        X_tr: npt.ArrayLike,
-        y_tr: npt.ArrayLike,
-        X_te: npt.ArrayLike,
-        y_te: npt.ArrayLike,
+        split: metrics_mod.Split,
     ) -> dict[str, dict[str, float]]:
         runs: dict[str, dict[str, float]] = {}
         for name, model in get_models(model_names):
-            m = metrics_mod.fit_and_score(model, X_tr, y_tr, X_te, y_te)
+            m = metrics_mod.fit_and_score(model, split)
             # Persist the exact trained feature order on the model itself so
             # serving can validate against it instead of guessing (see
             # src/service/routes.py's feature_columns_ check).
@@ -80,11 +83,10 @@ class Trainer:
     def run(self, model_names: Iterable[str] = ("logreg",)) -> dict[str, Any]:
         # 1) prep
         _, used_feats, train_df, test_df = self.prepare_data()
-        X_tr, y_tr = to_xy(train_df, used_feats)
-        X_te, y_te = to_xy(test_df, used_feats)
+        split = metrics_mod.Split(*to_xy(train_df, used_feats), *to_xy(test_df, used_feats))
 
         # 2) train each requested model
-        runs = self.train_models(model_names, used_feats, X_tr, y_tr, X_te, y_te)
+        runs = self.train_models(model_names, used_feats, split)
 
         # 3) choose best & persist stable path
         best_name, best_metrics = pick_best(runs)

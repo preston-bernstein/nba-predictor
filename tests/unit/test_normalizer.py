@@ -1,4 +1,6 @@
 import pytest
+from hypothesis import given, settings
+from hypothesis.strategies import lists, sampled_from, text
 
 from src.service.normalizer import (
     ALIASES,
@@ -7,14 +9,6 @@ from src.service.normalizer import (
     TeamNormalizeError,
     normalize_team,
 )
-
-try:
-    from hypothesis import given, settings
-    from hypothesis.strategies import lists, sampled_from, text
-
-    HAVE_HYPOTHESIS = True
-except ImportError:  # pragma: no cover
-    HAVE_HYPOTHESIS = False
 
 # ---- Helpers ---------------------------------------------------------------
 
@@ -28,7 +22,7 @@ def variants(word: str):
 
 def with_noise(s: str):
     """Sprinkle benign punctuation and whitespace; normalizer should handle it."""
-    punct = " -_.,!:/\\|—–"
+    punct = " -_.,!:/\\|\u2014\u2013"
     parts = s.split()
     if not parts:
         return [s]
@@ -150,18 +144,18 @@ def test_unknown_team_raises(bad):
 @pytest.mark.parametrize("bad", [None, 123, 3.14, object(), [], {}])
 def test_non_string_inputs_raise(bad):
     with pytest.raises(TeamNormalizeError):
-        normalize_team(bad)  # type: ignore[arg-type]
+        normalize_team(bad)
 
 
-BENIGN_PUNCT = list(" -_.,!:/\\|—–")
+BENIGN_PUNCT = list(" -_.,!:/\\|\u2014\u2013")
 
 
 @settings(max_examples=120)
 @given(
     base_alias=sampled_from(list(ALIASES.keys()) + [n for n, _ in EXAMPLES]),
-    left=text(alphabet=sampled_from(BENIGN_PUNCT + [" "]), min_size=0, max_size=3),
-    right=text(alphabet=sampled_from(BENIGN_PUNCT + [" "]), min_size=0, max_size=3),
-    mid=lists(sampled_from(BENIGN_PUNCT + [" "]), min_size=0, max_size=2),
+    left=text(alphabet=sampled_from([*BENIGN_PUNCT, " "]), min_size=0, max_size=3),
+    right=text(alphabet=sampled_from([*BENIGN_PUNCT, " "]), min_size=0, max_size=3),
+    mid=lists(sampled_from([*BENIGN_PUNCT, " "]), min_size=0, max_size=2),
 )
 def test_property_noise_tolerance(base_alias, left, right, mid):
     target = ALIASES.get(base_alias.upper(), dict(EXAMPLES).get(base_alias))

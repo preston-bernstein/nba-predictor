@@ -17,7 +17,7 @@ from .br_parse import parse_games
 
 OUT_DIR = config.DATA_DIR
 
-# --- Local fallbacks to avoid ingest failures if normalizer isn’t picked up ---
+# --- Local fallbacks to avoid ingest failures if normalizer isn't picked up ---
 # (Uppercased, single-spaced keys.)
 _FALLBACK_BR_FULL = {
     "ATLANTA HAWKS": "ATL",
@@ -176,7 +176,7 @@ def main(seasons: list[int]) -> None:
     logging.info("saved %d games -> %s", len(games), out_csv)
 
 
-def _cli() -> None:  # pragma: no cover
+def _cli(argv: list[str] | None = None) -> None:
     # This module doubles as a standalone CLI entry point (`python -m
     # src.data.fetch`, wired to `make fetch`), so it configures logging here
     # rather than at import time -- importing this module as a library (e.g.
@@ -188,7 +188,7 @@ def _cli() -> None:  # pragma: no cover
         dest="from_year",
         type=int,
         default=2019,
-        help="Start season end-year (e.g., 2019 means 2018–19).",
+        help="Start season end-year (e.g., 2019 means 2018-19).",
     )
     ap.add_argument(
         "--to",
@@ -203,7 +203,7 @@ def _cli() -> None:  # pragma: no cover
         nargs="+",
         help="Explicit list of season end-years (overrides --from/--to).",
     )
-    args = ap.parse_args()
+    args = ap.parse_args(argv)
 
     # args.seasons is Optional[List[int]]
     seasons: list[int] = (
@@ -212,5 +212,5 @@ def _cli() -> None:  # pragma: no cover
     main(seasons)
 
 
-if __name__ == "__main__":  # pragma: no cover
+if __name__ == "__main__":
     _cli()

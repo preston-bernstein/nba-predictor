@@ -1,0 +1,10 @@
+# Allow-list of third-party actions. A new action must be added here in a reviewed change.
+rules:
+  forbidden-uses:
+    config:
+      allow:
+        - actions/*
+        - astral-sh/setup-uv
+        - codecov/codecov-action
+        - webfactory/ssh-agent
+        - preston-bernstein/ci-workflows/*

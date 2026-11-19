@@ -86,7 +86,7 @@ def test_predict_uses_persisted_feature_columns(monkeypatch):
     # A model that carries feature_columns_ (set by Trainer at train time)
     # should take the preferred branch instead of the n_features_in_ fallback.
     class ModelWithColumns(DummyModel):
-        feature_columns_ = ["delta_off", "delta_def", "delta_rest", "delta_elo"]
+        feature_columns_ = ("delta_off", "delta_def", "delta_rest", "delta_elo")
 
     monkeypatch.setattr(
         routes_mod,
@@ -113,7 +113,7 @@ def test_predict_insufficient_history_with_feature_columns(monkeypatch):
     # Thin history (delta_elo missing) with a model that expects it -> 422,
     # not a truncated/garbled request into predict_proba.
     class ModelWithColumns(DummyModel):
-        feature_columns_ = ["delta_off", "delta_def", "delta_rest", "delta_elo"]
+        feature_columns_ = ("delta_off", "delta_def", "delta_rest", "delta_elo")
 
     monkeypatch.setattr(
         routes_mod,

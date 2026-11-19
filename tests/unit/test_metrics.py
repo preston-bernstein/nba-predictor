@@ -17,12 +17,12 @@ class _DummyModel:
 
 
 def test_fit_and_score_handles_single_class():
-    X_tr = np.array([[0, 0], [1, 1], [2, 2]])
+    x_tr = np.array([[0, 0], [1, 1], [2, 2]])
     y_tr = np.array([0, 1, 1])
-    X_te = np.array([[0, 0]])  # tiny, likely single class in y_te check path
+    x_te = np.array([[0, 0]])  # tiny, likely single class in y_te check path
     y_te = np.array([1])  # single class -> roc_auc should fallback to 0.5
     m = _DummyModel()
-    out = metrics_mod.fit_and_score(m, X_tr, y_tr, X_te, y_te)
+    out = metrics_mod.fit_and_score(m, metrics_mod.Split(x_tr, y_tr, x_te, y_te))
     assert set(["n_train", "n_test", "accuracy", "roc_auc"]).issubset(out.keys())
     assert out["n_train"] == len(y_tr)
     assert out["n_test"] == len(y_te)

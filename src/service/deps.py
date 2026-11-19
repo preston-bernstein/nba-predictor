@@ -2,9 +2,11 @@ from __future__ import annotations
 
 import logging
 from functools import lru_cache
-from typing import Any
+from typing import Protocol
 
 import joblib
+import numpy as np
+import numpy.typing as npt
 import pandas as pd
 
 from src import config
@@ -29,10 +31,17 @@ def load_games() -> pd.DataFrame:
     return df
 
 
+class Model(Protocol):
+    """What the service needs from a trained model."""
+
+    def predict_proba(self, x: npt.ArrayLike, /) -> npt.NDArray[np.float64]: ...
+
+
 @lru_cache(maxsize=1)
-def load_model() -> Any:
+def load_model() -> Model:
     try:
-        return joblib.load(config.MODEL)
+        model: Model = joblib.load(config.MODEL)
+        return model
     except (OSError, EOFError):
         logger.exception("failed to load model artifact from %s", config.MODEL)
         raise

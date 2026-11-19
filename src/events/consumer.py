@@ -12,13 +12,14 @@ import signal
 import threading
 import time
 from collections.abc import Callable
+from dataclasses import dataclass
 from typing import Any
 
-from confluent_kafka import Consumer, Producer
+from confluent_kafka import Consumer, Message, Producer
 
-from src.utils.logging import setup as setup_logging
+from src.observability.logging import setup as setup_logging
 
-from .handler import PoisonMessage, Predict, handle_message
+from .handler import PoisonMessageError, Predict, handle_message
 from .ledger import Ledger, ledger_path
 from .predictions import predict_game
 
@@ -29,12 +30,31 @@ DEFAULT_DLQ_TOPIC = "game.updated.dlq"
 DEFAULT_GROUP = "predictor"
 
 
-class RetriesExhausted(Exception):  # noqa: N818
+class RetriesExhaustedError(Exception):
     """A transient error lasted through every retry. Nothing was committed."""
 
 
-class _Stopped(Exception):  # noqa: N818
+class _StoppedError(Exception):
     """Shutdown was requested while a message was still being retried."""
+
+
+@dataclass(frozen=True)
+class WorkerDeps:
+    consumer: Consumer
+    producer: Producer
+    ledger: Ledger
+    predict: Predict
+
+
+@dataclass(frozen=True)
+class WorkerSettings:
+    topic: str = DEFAULT_TOPIC
+    dlq_topic: str = DEFAULT_DLQ_TOPIC
+    group_id: str = DEFAULT_GROUP
+    max_retries: int = 5
+    base_delay: float = 0.5
+    max_delay: float = 30.0
+    sleep: Callable[[float], None] = time.sleep
 
 
 def consumer_config(brokers: str, group_id: str | None = None) -> dict[str, Any]:
@@ -51,32 +71,19 @@ def producer_config(brokers: str) -> dict[str, Any]:
 
 
 class Worker:
-    def __init__(
-        self,
-        consumer: Any,
-        producer: Any,
-        ledger: Ledger,
-        predict: Predict,
-        *,
-        topic: str = DEFAULT_TOPIC,
-        dlq_topic: str = DEFAULT_DLQ_TOPIC,
-        group_id: str = DEFAULT_GROUP,
-        max_retries: int = 5,
-        base_delay: float = 0.5,
-        max_delay: float = 30.0,
-        sleep: Callable[[float], None] = time.sleep,
-    ) -> None:
-        self.consumer = consumer
-        self.producer = producer
-        self.ledger = ledger
-        self.predict = predict
-        self.topic = topic
-        self.dlq_topic = dlq_topic
-        self.group_id = group_id
-        self.max_retries = max_retries
-        self.base_delay = base_delay
-        self.max_delay = max_delay
-        self._sleep = sleep
+    def __init__(self, deps: WorkerDeps, settings: WorkerSettings | None = None) -> None:
+        settings = settings or WorkerSettings()
+        self.consumer = deps.consumer
+        self.producer = deps.producer
+        self.ledger = deps.ledger
+        self.predict = deps.predict
+        self.topic = settings.topic
+        self.dlq_topic = settings.dlq_topic
+        self.group_id = settings.group_id
+        self.max_retries = settings.max_retries
+        self.base_delay = settings.base_delay
+        self.max_delay = settings.max_delay
+        self._sleep = settings.sleep
         self._stop = threading.Event()
 
     def run(self, stop: threading.Event, poll_timeout: float = 1.0) -> None:
@@ -92,12 +99,12 @@ class Worker:
                     continue
                 try:
                     self.process(msg)
-                except _Stopped:
+                except _StoppedError:
                     break
         finally:
             self.consumer.close()
 
-    def process(self, msg: Any) -> None:
+    def process(self, msg: Message[bytes, bytes]) -> None:
         """Handle one message, retrying transient errors, then commit it."""
         attempt = 0
         while True:
@@ -106,7 +113,7 @@ class Worker:
                 break
             except Exception as exc:
                 if attempt >= self.max_retries:
-                    raise RetriesExhausted(
+                    raise RetriesExhaustedError(
                         f"gave up on {msg.topic()}[{msg.partition()}]@{msg.offset()}: {exc}"
                     ) from exc
                 delay = min(self.base_delay * 2**attempt, self.max_delay)
@@ -114,21 +121,21 @@ class Worker:
                 self._sleep(delay)
                 attempt += 1
                 if self._stop.is_set():
-                    raise _Stopped from exc
+                    raise _StoppedError from exc
         self.consumer.commit(message=msg, asynchronous=False)
 
-    def _handle_once(self, msg: Any) -> None:
+    def _handle_once(self, msg: Message[bytes, bytes]) -> None:
         try:
             result = handle_message(self.ledger, self.predict, msg.value())
-        except PoisonMessage as poison:
+        except PoisonMessageError as poison:
             logger.warning("poison message, sending to %s: %s", self.dlq_topic, poison.reason)
             self._publish_dlq(msg, poison.reason)
             return
         logger.info("event %s at %s[%d]@%d", result, msg.topic(), msg.partition(), msg.offset())
 
-    def _publish_dlq(self, msg: Any, reason: str) -> None:
+    def _publish_dlq(self, msg: Message[bytes, bytes], reason: str) -> None:
         errors: list[Any] = []
-        headers = [
+        headers: list[tuple[str, str | bytes | None]] = [
             ("dlq-reason", reason),
             ("dlq-source-topic", msg.topic()),
             ("dlq-source-partition", str(msg.partition())),
@@ -154,22 +161,24 @@ def main() -> int:
         logger.info("KAFKA_BROKERS is not set; the consumer is disabled")
         return 0
     group = os.getenv("KAFKA_GROUP_ID", DEFAULT_GROUP)
-    worker = Worker(
+    deps = WorkerDeps(
         Consumer(consumer_config(brokers, group)),
         Producer(producer_config(brokers)),
         Ledger(ledger_path()),
         predict_game,
+    )
+    settings = WorkerSettings(
         topic=os.getenv("KAFKA_TOPIC", DEFAULT_TOPIC),
         dlq_topic=os.getenv("KAFKA_DLQ_TOPIC", DEFAULT_DLQ_TOPIC),
         group_id=group,
         max_retries=int(os.getenv("KAFKA_MAX_RETRIES", "5")),
-        sleep=time.sleep,
     )
+    worker = Worker(deps, settings)
     stop = threading.Event()
     old = {s: signal.signal(s, lambda *_: stop.set()) for s in (signal.SIGINT, signal.SIGTERM)}
     try:
         worker.run(stop)
-    except RetriesExhausted:
+    except RetriesExhaustedError:
         logger.exception("stopping: a message kept failing and was not committed")
         return 1
     finally:

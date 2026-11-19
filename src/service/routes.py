@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Annotated
 
 import numpy as np
 from fastapi import APIRouter, Depends
@@ -51,12 +52,28 @@ def ledger_summary() -> LedgerSummary:
     return LedgerSummary(**read_summary(ledger_path()))
 
 
+def _feature_order(model: deps.Model, deltas: dict[str, float]) -> list[str]:
+    """Feature order for the model: the one persisted at train time, else the canonical prefix."""
+    feature_columns = getattr(model, "feature_columns_", None)
+    if feature_columns:
+        return list(feature_columns)
+    # Fallback to canonical order by prefix; cap at model.n_features_in_ if available
+    available = [k for k in config.FEATURE_ORDER if k in deltas]
+    n_expected = getattr(model, "n_features_in_", None)
+    return available if n_expected is None else available[: int(n_expected)]
+
+
+def _predict_prob(model: deps.Model, order: list[str], deltas: dict[str, float]) -> float:
+    features = np.array([[float(deltas[k]) for k in order]], dtype=float)
+    return float(model.predict_proba(features)[:, 1][0])
+
+
 @router.get(
     "/predict",
     response_model=PredictResponse,
     responses={422: {"model": ErrorResponse}},
 )
-def predict(q: PredictQuery = Depends()) -> PredictResponse:  # noqa: B008
+def predict(q: Annotated[PredictQuery, Depends()]) -> PredictResponse:
     """
     Normalize/validate teams inside deps.matchup_features, compute deltas,
     enforce deterministic feature order, and surface domain/history issues as 422.
@@ -73,26 +90,15 @@ def predict(q: PredictQuery = Depends()) -> PredictResponse:  # noqa: B008
         logger.exception("failed to load model artifact for /predict")
         raise
 
-    # Preferred order if the model exposes it (persisted at train time by Trainer)
-    feature_columns = getattr(model, "feature_columns_", None)
-
-    if feature_columns:
-        order = list(feature_columns)
-    else:
-        # Fallback to canonical order by prefix; cap at model.n_features_in_ if available
-        available = [k for k in config.FEATURE_ORDER if k in deltas]
-        n_expected = getattr(model, "n_features_in_", None)
-        order = available if n_expected is None else available[: int(n_expected)]
-
+    order = _feature_order(model, deltas)
     missing = [k for k in order if k not in deltas]
     if missing:
         raise unprocessable(
             f"Insufficient feature history for this date: missing {missing}; model expects {order}."
         )
 
-    X = np.array([[float(deltas[k]) for k in order]], dtype=float)
     try:
-        prob = float(model.predict_proba(X)[:, 1][0])
+        prob = _predict_prob(model, order, deltas)
     except Exception:
         logger.exception("model.predict_proba failed for %s vs %s", q.home, q.away)
         raise
