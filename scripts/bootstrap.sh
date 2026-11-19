@@ -4,19 +4,16 @@ set -euo pipefail
 
 python -m pip install -U pip pre-commit
 
-use_constraints=""
+use_constraints=()
 if [ -f constraints.txt ]; then
-  use_constraints="-c constraints.txt"
+  use_constraints=(-c constraints.txt)
 fi
 
-# shellcheck disable=SC2086 # $use_constraints is "-c file" and must split into two words
-{ [ -f requirements.txt ] && pip install --upgrade -r requirements.txt $use_constraints; } || true
-# shellcheck disable=SC2086 # same: $use_constraints must split
-{ [ -f requirements-dev.txt ] && pip install --upgrade -r requirements-dev.txt $use_constraints; } || true
+{ [ -f requirements.txt ] && pip install --upgrade -r requirements.txt ${use_constraints[@]+"${use_constraints[@]}"}; } || true
+{ [ -f requirements-dev.txt ] && pip install --upgrade -r requirements-dev.txt ${use_constraints[@]+"${use_constraints[@]}"}; } || true
 
 if [ -f pyproject.toml ]; then
-  # shellcheck disable=SC2086 # same: $use_constraints must split
-  pip install --upgrade --upgrade-strategy eager -e . $use_constraints
+  pip install --upgrade --upgrade-strategy eager -e . ${use_constraints[@]+"${use_constraints[@]}"}
 fi
 
 pip check || true

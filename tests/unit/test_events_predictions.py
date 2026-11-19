@@ -2,7 +2,7 @@ import pytest
 from fastapi import HTTPException
 
 from src.events import predictions
-from src.events.handler import PoisonMessage
+from src.events.handler import PoisonMessageError
 from src.service.schemas import PredictResponse
 
 
@@ -69,7 +69,7 @@ def test_unresolvable_team_is_poison(monkeypatch):
         raise HTTPException(422, "unknown team 'x'")
 
     monkeypatch.setattr(predictions.routes, "predict", fake)
-    with pytest.raises(PoisonMessage) as exc:
+    with pytest.raises(PoisonMessageError) as exc:
         predictions.predict_game(game())
     assert "unknown team" in exc.value.reason
 

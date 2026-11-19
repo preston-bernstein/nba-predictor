@@ -79,3 +79,19 @@ def test_years_span_raises_when_end_lt_start():
 
     with pytest.raises(SystemExit):
         years_span(2025, 2024)
+
+
+def test_cli_passes_explicit_seasons_to_main(monkeypatch):
+    seen = {}
+    monkeypatch.setattr(fetch, "configure_logging", lambda name: seen.setdefault("log", name))
+    monkeypatch.setattr(fetch, "main", lambda seasons: seen.setdefault("seasons", seasons))
+    fetch._cli(["--seasons", "2023", "2024"])
+    assert seen == {"log": "nba-predictor", "seasons": [2023, 2024]}
+
+
+def test_cli_uses_year_span_by_default(monkeypatch):
+    seen = {}
+    monkeypatch.setattr(fetch, "configure_logging", lambda name: None)
+    monkeypatch.setattr(fetch, "main", lambda seasons: seen.setdefault("seasons", seasons))
+    fetch._cli(["--from", "2022", "--to", "2024"])
+    assert seen["seasons"] == fetch.years_span(2022, 2024)

@@ -21,7 +21,7 @@ def fetch_season_html(end_year: int, retries: int = 3, timeout: int = 60) -> str
             resp = requests.get(url, headers=HEADERS, timeout=timeout)
             resp.raise_for_status()
             return resp.text
-        except Exception as e:  # noqa: BLE001 -- retry loop: logs each failure, re-raises after the last
+        except requests.RequestException as e:
             err = e
             logging.warning("fetch %s failed (attempt %d/%d): %s", end_year, attempt, retries, e)
             time.sleep(1.5 * attempt)

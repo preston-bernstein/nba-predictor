@@ -46,9 +46,9 @@ def to_xy(
     df: pd.DataFrame, features: list[str], target: str = "home_win"
 ) -> tuple[npt.NDArray[np.float64], npt.NDArray[np.int_]]:
     """Convert a frame to (X, y) numpy arrays."""
-    X: npt.NDArray[np.float64] = df[features].to_numpy(dtype=np.float64, copy=False)  # noqa: N806 -- sklearn X naming convention
+    x: npt.NDArray[np.float64] = df[features].to_numpy(dtype=np.float64, copy=False)
     y: npt.NDArray[np.int_] = df[target].to_numpy(dtype=np.int_, copy=False)
-    return X, y
+    return x, y
 
 
 def baseline_stats(test_df: pd.DataFrame) -> dict[str, float]:

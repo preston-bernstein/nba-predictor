@@ -47,3 +47,13 @@ def test_train_writes_artifacts(tmp_path, monkeypatch):
         assert key in metrics
     assert 0.0 <= metrics["accuracy"] <= 1.0
     assert 0.0 <= metrics["roc_auc"] <= 1.0
+
+
+def test_cli_passes_models_to_main(monkeypatch):
+    seen = {}
+    monkeypatch.setattr(train_mod, "main", lambda models: seen.setdefault("models", models))
+    train_mod.cli(["--models", "logreg", "rf"])
+    assert seen["models"] == ["logreg", "rf"]
+    seen.clear()
+    train_mod.cli([])
+    assert seen["models"] == ["logreg"]

@@ -1,25 +1,23 @@
-# docker-allow: root container user not yet audited for file ownership and ports; add USER after testing
-# docker-allow: unpinned image has no pinnable upstream tag or digest (local build or moving tag)
-FROM python:3.12-slim
+FROM python:3.12-slim@sha256:5e2bdb1b0d542d5039cffb8181c65930093949194a65c365dfb1b0fe13a4fa5b
 
 ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1
 
 WORKDIR /work
 
-# existing finding; fix when this line is next changed
-# hadolint ignore=DL3008
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential curl git libxml2-dev libxslt1-dev \
- && rm -rf /var/lib/apt/lists/*
+    build-essential=12.12 curl=8.14.1-2+deb13u7 git=1:2.47.3-0+deb13u1 \
+    libxml2-dev=2.12.7+dfsg+really2.9.14-2.1+deb13u3 libxslt1-dev=1.1.35-1.2+deb13u3 \
+ && rm -rf /var/lib/apt/lists/* \
+ && useradd --create-home --uid 1000 app \
+ && chown app:app /work
 
 COPY requirements.txt requirements-dev.txt* ./
-# existing finding; fix when this line is next changed
-# hadolint ignore=DL3013,DL3042
-RUN pip install -U pip && \
-    if [ -f requirements.txt ]; then pip install -r requirements.txt; fi && \
-    if [ -f requirements-dev.txt ]; then pip install -r requirements-dev.txt; fi
+RUN pip install --no-cache-dir pip==25.0.1 && \
+    if [ -f requirements.txt ]; then pip install --no-cache-dir -r requirements.txt; fi && \
+    if [ -f requirements-dev.txt ]; then pip install --no-cache-dir -r requirements-dev.txt; fi
 
-COPY . .
+USER app
+COPY --chown=app:app . .
 
 # The Kafka consumer uses this same image. Run it with another command:
 #   python -m src.events.consumer

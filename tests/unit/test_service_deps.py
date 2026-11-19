@@ -146,32 +146,44 @@ def test_matchup_features_propagates_domain_errors(monkeypatch):
         deps_mod.matchup_features("NYK", "???")
 
 
-@pytest.mark.parametrize(
-    "inp,teams_in_data,normalize_team,canonical_name,expected,err",
-    [
-        ("NYK", set(), lambda t: "NYK", lambda c: "New York Knicks", "NYK", None),
-        ("NYK", {"NYK", "BOS"}, lambda t: t, lambda c: "New York Knicks", "NYK", None),
-        (
-            "foo",
-            {"NYK", "BOS"},
-            lambda t: "LAL",
-            lambda c: "Los Angeles Lakers",
-            None,
-            r"unknown team 'foo'",
-        ),
-    ],
-)
-def test__resolve_for_df_cases(
-    inp, teams_in_data, normalize_team, canonical_name, expected, err, monkeypatch
-):
-    monkeypatch.setattr(deps_mod, "normalize_team", normalize_team, raising=True)
-    monkeypatch.setattr(deps_mod, "canonical_name", canonical_name, raising=True)
-    if err:
-        with pytest.raises(ValueError, match=err):
-            deps_mod._resolve_for_df(inp, teams_in_data)
+RESOLVE_CASES = [
+    {
+        "inp": "NYK",
+        "teams": set(),
+        "normalize": lambda t: "NYK",
+        "canonical": lambda c: "New York Knicks",
+        "expected": "NYK",
+        "err": None,
+    },
+    {
+        "inp": "NYK",
+        "teams": {"NYK", "BOS"},
+        "normalize": lambda t: t,
+        "canonical": lambda c: "New York Knicks",
+        "expected": "NYK",
+        "err": None,
+    },
+    {
+        "inp": "foo",
+        "teams": {"NYK", "BOS"},
+        "normalize": lambda t: "LAL",
+        "canonical": lambda c: "Los Angeles Lakers",
+        "expected": None,
+        "err": r"unknown team 'foo'",
+    },
+]
+
+
+@pytest.mark.parametrize("case", RESOLVE_CASES)
+def test__resolve_for_df_cases(case, monkeypatch):
+    monkeypatch.setattr(deps_mod, "normalize_team", case["normalize"], raising=True)
+    monkeypatch.setattr(deps_mod, "canonical_name", case["canonical"], raising=True)
+    if case["err"]:
+        with pytest.raises(ValueError, match=case["err"]):
+            deps_mod._resolve_for_df(case["inp"], case["teams"])
     else:
-        out = deps_mod._resolve_for_df(inp, teams_in_data)
-        assert out == expected
+        out = deps_mod._resolve_for_df(case["inp"], case["teams"])
+        assert out == case["expected"]
 
 
 def test_load_games_missing_columns_raises(tmp_path, monkeypatch):

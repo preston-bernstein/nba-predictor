@@ -1,7 +1,7 @@
 import threading
 
 import pytest
-from events_helpers import (
+from events_fakes import (
     FakeConsumer,
     FakeMessage,
     FakePredict,
@@ -11,23 +11,19 @@ from events_helpers import (
 )
 
 from src.events import consumer as consumer_mod
-from src.events.consumer import RetriesExhausted, Worker
+from src.events.consumer import RetriesExhaustedError, Worker, WorkerDeps, WorkerSettings
 from src.events.ledger import Ledger
 
 
-def build(tmp_path, predict=None, producer=None, consumer=None, **kw):
+def build(tmp_path, **kw):
+    """Wire a Worker to fakes. predict, producer, consumer are passed; the rest are settings."""
     sleeps: list[float] = []
     ledger = Ledger(tmp_path / "l.sqlite")
-    consumer = consumer or FakeConsumer()
-    producer = producer or FakeProducer()
-    worker = Worker(
-        consumer,
-        producer,
-        ledger,
-        predict or FakePredict(),
-        sleep=sleeps.append,
-        **kw,
-    )
+    consumer = kw.pop("consumer", None) or FakeConsumer()
+    producer = kw.pop("producer", None) or FakeProducer()
+    predict = kw.pop("predict", None) or FakePredict()
+    settings = WorkerSettings(sleep=sleeps.append, **kw)
+    worker = Worker(WorkerDeps(consumer, producer, ledger, predict), settings)
     return worker, ledger, consumer, producer, sleeps
 
 
@@ -86,7 +82,7 @@ def test_dlq_unflushed_counts_as_failure(tmp_path):
     worker, _, consumer, _, sleeps = build(
         tmp_path, producer=FakeProducer(unflushed=1), max_retries=2
     )
-    with pytest.raises(RetriesExhausted):
+    with pytest.raises(RetriesExhaustedError):
         worker.process(FakeMessage(b"{bad"))
     assert consumer.committed == []
     assert len(sleeps) == 2
@@ -115,7 +111,7 @@ def test_backoff_is_capped(tmp_path):
     worker, _, consumer, _, sleeps = build(
         tmp_path, predict=predict, max_retries=5, base_delay=1.0, max_delay=3.0
     )
-    with pytest.raises(RetriesExhausted):
+    with pytest.raises(RetriesExhaustedError):
         worker.process(FakeMessage(to_bytes(make_event())))
     assert sleeps == [1.0, 2.0, 3.0, 3.0, 3.0]
     assert consumer.committed == []
@@ -144,7 +140,7 @@ def test_run_closes_consumer_when_retries_exhausted(tmp_path):
 
     consumer = FakeConsumer([FakeMessage(to_bytes(make_event()))])
     worker, _, consumer, _, _ = build(tmp_path, predict=predict, consumer=consumer, max_retries=1)
-    with pytest.raises(RetriesExhausted):
+    with pytest.raises(RetriesExhaustedError):
         worker.run(threading.Event())
     assert consumer.closed
     assert consumer.committed == []

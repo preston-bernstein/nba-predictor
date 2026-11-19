@@ -2,9 +2,9 @@ import json
 import sqlite3
 
 import pytest
-from events_helpers import FakePredict, make_event, to_bytes
+from events_fakes import FakePredict, make_event, to_bytes
 
-from src.events.handler import PoisonMessage, handle_message
+from src.events.handler import PoisonMessageError, handle_message
 from src.events.ledger import Ledger
 
 
@@ -134,7 +134,7 @@ def test_failed_write_leaves_no_event_row(ledger, monkeypatch):
     ],
 )
 def test_poison_inputs(ledger, value, reason):
-    with pytest.raises(PoisonMessage) as exc:
+    with pytest.raises(PoisonMessageError) as exc:
         handle_message(ledger, FakePredict(), value)
     assert reason in exc.value.reason
 
@@ -142,13 +142,13 @@ def test_poison_inputs(ledger, value, reason):
 def test_schema_mismatch_wrong_version(ledger):
     ev = make_event()
     ev["schemaVersion"] = 2
-    with pytest.raises(PoisonMessage) as exc:
+    with pytest.raises(PoisonMessageError) as exc:
         handle_message(ledger, FakePredict(), to_bytes(ev))
     assert "schema" in exc.value.reason
 
 
 def test_final_tie_is_poison(ledger):
-    with pytest.raises(PoisonMessage) as exc:
+    with pytest.raises(PoisonMessageError) as exc:
         handle_message(
             ledger, FakePredict(), to_bytes(make_event(status_kind="FINAL", score=(90, 90)))
         )
@@ -157,9 +157,9 @@ def test_final_tie_is_poison(ledger):
 
 def test_unresolvable_team_is_poison(ledger):
     def predict(game):
-        raise PoisonMessage("unresolvable team: nope")
+        raise PoisonMessageError("unresolvable team: nope")
 
-    with pytest.raises(PoisonMessage):
+    with pytest.raises(PoisonMessageError):
         handle_message(ledger, predict, to_bytes(make_event()))
     assert ledger.get_game("g-1") is None
     assert ledger.count_events() == 0

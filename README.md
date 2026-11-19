@@ -92,7 +92,7 @@ src/
   data/               # scraping and feature engineering
   model/              # training and model selection
   service/            # FastAPI app, routes, schemas, normalizer
-  utils/              # logging helpers
+  observability/      # logging setup
 tests/                # unit and integration tests (fixtures included)
 artifacts/            # generated model + metrics
 data_cache/           # generated games and features CSVs
