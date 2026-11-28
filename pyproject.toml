@@ -134,3 +134,8 @@ fail_under = 0
 [tool.coverage.html]
 directory = "coverage_html"
 show_contexts = true
+
+# Dead-code check (python-uv pack). A name used only by a framework or by reflection goes in vulture_allow.py with a comment saying why.
+[tool.vulture]
+paths = ["src", "vulture_allow.py"]
+min_confidence = 60

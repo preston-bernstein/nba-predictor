@@ -8,6 +8,9 @@
 # Env:
 #   SH_BASH   bash used for the syntax check (default /bin/bash, which is 3.2 on macOS)
 set -euo pipefail
+# A git hook exports GIT_DIR, GIT_INDEX_FILE and the like. A test that runs git in a temp folder would inherit them
+# and write into this repo instead, so drop git's repo-local variables before any tool runs.
+while IFS= read -r v; do unset "$v"; done < <(git rev-parse --local-env-vars 2>/dev/null || true)
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="${1:-.}"
@@ -15,16 +18,21 @@ cd "$ROOT"
 SH_BASH="${SH_BASH:-/bin/bash}"
 [ -x "$SH_BASH" ] || SH_BASH=bash
 
-fail() { echo "shell-validate: $*" >&2; exit "${2:-1}"; }
+fail() {
+  echo "shell-validate: $*" >&2
+  exit "${2:-1}"
+}
 need() { command -v "$1" >/dev/null 2>&1 || fail "missing tool: $1 (the gate never skips a step)" 127; }
 
-prune=( \( -name node_modules -o -name vendor -o -name '.?*' \) -prune -o )
+prune=(\( -name node_modules -o -name vendor -o -name '.?*' \) -prune -o)
 scripts=()
 while IFS= read -r f; do scripts+=("$f"); done < <(
-  find . -mindepth 1 "${prune[@]}" -type f \( -name '*.sh' -o -name '*.bash' \) -print | sort)
+  find . -mindepth 1 "${prune[@]}" -type f \( -name '*.sh' -o -name '*.bash' \) -print | sort
+)
 bats_files=()
 while IFS= read -r f; do bats_files+=("$f"); done < <(
-  find . -mindepth 1 "${prune[@]}" -type f -name '*.bats' -print | sort)
+  find . -mindepth 1 "${prune[@]}" -type f -name '*.bats' -print | sort
+)
 
 # .shell-allow: `<glob> <reason>` per line leaves vendored or template paths out of every step (shell-check.py reports a line with no reason).
 # A git submodule (.gitmodules) is third-party code and is always left out.
